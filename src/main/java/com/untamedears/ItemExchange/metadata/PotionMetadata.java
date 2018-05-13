@@ -16,10 +16,12 @@ import com.untamedears.ItemExchange.utility.ExchangeRule;
 public class PotionMetadata implements AdditionalMetadata {
 	private static final String[] numerals = {"I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"};
 	
-	private List<PotionEffect> effects;
+	private List<PotionEffect> effects = null;
 	
 	public PotionMetadata(PotionMeta meta) {
-		effects.addAll(meta.getCustomEffects());
+		if (meta != null && meta.hasCustomEffects()) {
+			effects.addAll(meta.getCustomEffects());
+		}
 	}
 	
 	private PotionMetadata() {
@@ -29,18 +31,22 @@ public class PotionMetadata implements AdditionalMetadata {
 	@Override
 	public String serialize() {
 		StringBuilder serialized = new StringBuilder();
-		
-		Iterator<PotionEffect> iterator = effects.iterator();
-		
-		while(iterator.hasNext()) {
-			PotionEffect effect = iterator.next();
-			
-			serialized.append(effect.getType().getName()).append(ExchangeRule.tertiarySpacer).append(effect.getAmplifier()).append(ExchangeRule.tertiarySpacer).append(effect.getDuration()).append(ExchangeRule.tertiarySpacer).append(effect.isAmbient());
-			
-			if(iterator.hasNext())
-				serialized.append(ExchangeRule.secondarySpacer);
+		if (effects != null) {
+			Iterator<PotionEffect> iterator = effects.iterator();
+			while(iterator.hasNext()) {
+				PotionEffect effect = iterator.next();
+				serialized
+					.append(effect.getType().getName())
+					.append(ExchangeRule.tertiarySpacer)
+					.append(effect.getAmplifier())
+					.append(ExchangeRule.tertiarySpacer)
+					.append(effect.getDuration())
+					.append(ExchangeRule.tertiarySpacer)
+					.append(effect.isAmbient());
+				if(iterator.hasNext())
+					serialized.append(ExchangeRule.secondarySpacer);
+			}
 		}
-		
 		return serialized.toString();
 	}
 
@@ -65,7 +71,7 @@ public class PotionMetadata implements AdditionalMetadata {
 		
 		info.append(ChatColor.DARK_AQUA).append("Potion effects: ");
 		
-		if(effects.size() > 0) {
+		if(effects != null && effects.size() > 0) {
 			Iterator<PotionEffect> iterator = effects.iterator();
 			
 			while(iterator.hasNext()) {
@@ -100,7 +106,7 @@ public class PotionMetadata implements AdditionalMetadata {
 	public static PotionMetadata deserialize(String s) {
 		PotionMetadata metadata = new PotionMetadata();
 		
-		metadata.effects = new ArrayList<PotionEffect>();
+		metadata.effects = new ArrayList<>();
 		
 		String[] effects = s.split(ExchangeRule.secondarySpacer);
 		

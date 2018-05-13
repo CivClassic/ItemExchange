@@ -47,13 +47,13 @@ import com.untamedears.ItemExchange.metadata.PotionMetadata;
  * @author Brian Landry
  */
 public class ExchangeRule {
-	private static final List<Material> NOT_SUPPORTED = Arrays.asList(Material.MAP, Material.WRITTEN_BOOK, Material.ENCHANTED_BOOK, Material.FIREWORK, Material.FIREWORK_CHARGE, Material.POTION);
+	private static final List<Material> NOT_SUPPORTED = Arrays.asList(Material.MAP, Material.WRITTEN_BOOK, Material.ENCHANTED_BOOK, Material.FIREWORK, Material.FIREWORK_CHARGE);
 	
-	public static final String hiddenRuleSpacer = "ง&ง&ง&ง&งr";
-	public static final String hiddenCategorySpacer = "ง&ง&ง&งr";
-	public static final String hiddenSecondarySpacer = "ง&ง&งr";
-	public static final String hiddenTertiarySpacer = "ง&งr";
-	
+	public static final String hiddenRuleSpacer = "ยง&ยง&ยง&ยง&ยงr";
+	public static final String hiddenCategorySpacer = "ยง&ยง&ยง&ยงr";
+	public static final String hiddenSecondarySpacer = "ยง&ยง&ยงr";
+	public static final String hiddenTertiarySpacer = "ยง&ยงr";
+
 	public static final String ruleSpacer = "&&&&r";
 	public static final String categorySpacer = "&&&r";
 	public static final String secondarySpacer = "&&r";
@@ -136,7 +136,9 @@ public class ExchangeRule {
 
 		ExchangeRule exchangeRule = new ExchangeRule(itemStack.getType(), itemStack.getAmount(), itemStack.getDurability(), requiredEnchantments, new ArrayList<Enchantment>(), false, displayName, lore, ruleType);
 
-		exchangeRule.setAdditionalMetadata(additional);
+		if (additional != null) {
+			exchangeRule.setAdditionalMetadata(additional);
+		}
 
 		return exchangeRule;
 	}
@@ -249,7 +251,7 @@ public class ExchangeRule {
 			String[] lore = new String[0];
 			if (!compiledRule[9].equals("")) {
 				lore = showString(compiledRule[9]).split(secondarySpacer);
-				
+
 				for(int i = 0; i < lore.length; i++) {
 					lore[i] = unescapeString(lore[i]);
 				}
@@ -295,34 +297,34 @@ public class ExchangeRule {
 	 */
 	private static String showString(String string) {
 		StringBuilder result = new StringBuilder();
-		
+
 		char[] chars = string.toCharArray();
-		
+
 		for(int i = 1; i < chars.length; i += 2) {
 			result.append(chars[i]);
 		}
-		
+
 		return result.toString();
 	}
 
 	/*
-	 * Adds a ง in front of every character in a string
+	 * Adds a ยง in front of every character in a string
 	 */
 	private static String hideString(String string) {
 		String hiddenString = "";
 		for (char character : string.toCharArray()) {
-			hiddenString += "ง" + character;
+			hiddenString += "ยง" + character;
 		}
 		return hiddenString;
 	}
-	
+
 	/*
 	 * Escapes all 'r' and '\' characters in a string
 	 */
 	private static String escapeString(String string) {
 		return string.replaceAll("([\\\\r])", "\\\\$1");
 	}
-	
+
 	/*
 	 * Un-escapes all 'r' and '\' characters in a string
 	 */
@@ -367,11 +369,11 @@ public class ExchangeRule {
 						}
 					}
 				}
-				
+
 				if(NOT_SUPPORTED.contains(material)) {
 					throw new ExchangeRuleParseException("This material is not supported.");
 				}
-				
+
 				return new ExchangeRule(material, amount, durability, ruleType);
 			}
 			else {
@@ -386,7 +388,7 @@ public class ExchangeRule {
 	public static ItemStack toBulkItemStack(Collection<ExchangeRule> rules) {
 		ItemStack itemStack = ItemExchangePlugin.ITEM_RULE_ITEMSTACK.clone();
 
-		String ruleSpacer = "ง&ง&ง&ง&งr";
+		String ruleSpacer = "ยง&ยง&ยง&ยง&ยงr";
 
 		ItemMeta itemMeta = itemStack.getItemMeta();
 		itemMeta.setDisplayName(ChatColor.DARK_RED + "Bulk Rule Block");
@@ -423,22 +425,22 @@ public class ExchangeRule {
 		if(ItemExchangePlugin.ENCHANTABLE_ITEMS.contains(material)) {
 			newLore.add(displayedEnchantments());
 		}
-		
+
 		for (String line : displayedLore()) {
 			newLore.add(line);
 		}
-		
+
 		if(citadelGroup != null) {
 			newLore.add(ChatColor.RED + "Restricted with Citadel.");
 		}
-		
+
 		if(newLore.size() > 0) {
 			newLore.set(0, compileRule() + newLore.get(0));
 		}
 		else {
 			newLore.add(compileRule());
 		}
-		
+
 		itemMeta.setLore(newLore);
 		itemStack.setItemMeta(itemMeta);
 		return itemStack;
@@ -477,10 +479,10 @@ public class ExchangeRule {
 		compiledRule += hiddenCategorySpacer;
 		for (int i = 0; i < lore.length; i++) {
 			String line = lore[i];
-			
+
 			if(i > 0)
 				compiledRule += hiddenSecondarySpacer;
-			
+
 			compiledRule += hideString(escapeString(line));
 		}
 		compiledRule += hiddenCategorySpacer;
@@ -491,7 +493,7 @@ public class ExchangeRule {
 		if(citadelGroup != null) {
 			compiledRule += hideString(escapeString(citadelGroup.getName()));
 		}
-		compiledRule += hiddenCategorySpacer + "งr";
+		compiledRule += hiddenCategorySpacer + "ยงr";
 		return compiledRule;
 	}
 
