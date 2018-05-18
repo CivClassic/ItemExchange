@@ -25,5 +25,5 @@ public class ItemUtility {
 		ItemStack newStack = new ItemStack(material, 1, durability);
 		return getItemStackName(newStack);
 	}
-	
+
 }
