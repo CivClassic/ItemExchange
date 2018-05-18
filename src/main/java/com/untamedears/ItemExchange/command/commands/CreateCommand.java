@@ -15,7 +15,6 @@ import org.bukkit.util.BlockIterator;
 import com.untamedears.ItemExchange.ItemExchangePlugin;
 import com.untamedears.ItemExchange.command.PlayerCommand;
 import com.untamedears.ItemExchange.exceptions.ExchangeRuleCreateException;
-import com.untamedears.ItemExchange.exceptions.ExchangeRuleParseException;
 import com.untamedears.ItemExchange.utility.ExchangeRule;
 import com.untamedears.ItemExchange.utility.ExchangeRule.RuleType;
 import com.untamedears.ItemExchange.utility.ItemExchange;
@@ -63,10 +62,10 @@ public class CreateCommand extends PlayerCommand {
 				if (args.length == 1) {
 					//Assign a ruleType
 					RuleType ruleType = null;
-					if (args[0].equalsIgnoreCase("input")) {
+					if (args[0].equalsIgnoreCase("input") || args[0].equalsIgnoreCase("i")) {
 						ruleType = ExchangeRule.RuleType.INPUT;
 					}
-					else if (args[0].equalsIgnoreCase("output")) {
+					else if (args[0].equalsIgnoreCase("output") || args[0].equalsIgnoreCase("o")) {
 						ruleType = ExchangeRule.RuleType.OUTPUT;
 					}
 					if (ruleType != null) {
@@ -86,7 +85,7 @@ public class CreateCommand extends PlayerCommand {
 						
 						//Creates the ExchangeRule, converts it to an ItemStack and places it in the player's inventory
 						try {
-							player.getInventory().addItem(ExchangeRule.parseItemStack(inHand, ruleType).toItemStack());
+							player.getInventory().addItem(ExchangeRule.createRuleFromItem(inHand, ruleType).toItemStack());
 						}
 						catch (IllegalArgumentException e) {
 							player.sendMessage(ChatColor.RED + e.getMessage());
@@ -109,10 +108,10 @@ public class CreateCommand extends PlayerCommand {
 				else if (args.length >= 2) {
 					try {
 						//Attempts to create the ExchangeRule, converts it to an ItemStack and places it in the player's inventory
-						player.getInventory().addItem(ExchangeRule.parseCreateCommand(args).toItemStack());
+						player.getInventory().addItem(ExchangeRule.createRuleFromString(args).toItemStack());
 						player.sendMessage(ChatColor.GREEN + "Created Rule Block!");
 					}
-					catch (ExchangeRuleParseException e) {
+					catch (ExchangeRuleCreateException e) {
 						player.sendMessage(ChatColor.RED + "Incorrect entry format: " + e.getMessage());
 					}
 				}

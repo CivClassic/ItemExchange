@@ -56,6 +56,8 @@ public class ItemExchangePlugin extends JavaPlugin {
 	public static final ItemStack ITEM_RULE_ITEMSTACK = new ItemStack(Material.STONE_BUTTON, 1);
 	public static final Material ITEM_RULE_MATERIAL = ITEM_RULE_ITEMSTACK.getType();
 
+	public static final String[] NUMERALS = {"I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"};
+
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
 		return commandHandler.dispatch(sender, label, args);
 	}

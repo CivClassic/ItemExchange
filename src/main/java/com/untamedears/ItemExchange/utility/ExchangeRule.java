@@ -1,14 +1,7 @@
 package com.untamedears.ItemExchange.utility;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.UUID;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -26,6 +19,7 @@ import org.bukkit.inventory.meta.MapMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 
+import org.bukkit.potion.PotionData;
 import vg.civcraft.mc.namelayer.GroupManager;
 import vg.civcraft.mc.namelayer.group.Group;
 
@@ -38,600 +32,652 @@ import com.untamedears.ItemExchange.metadata.BookMetadata;
 import com.untamedears.ItemExchange.metadata.EnchantmentStorageMetadata;
 import com.untamedears.ItemExchange.metadata.PotionMetadata;
 
-/*
- * Contains the rules pertaining to an item which can participate in the exchange
- */
-
-/**
- * 
- * @author Brian Landry
- */
 public class ExchangeRule {
-	private static final List<Material> NOT_SUPPORTED = Arrays.asList(Material.MAP, Material.WRITTEN_BOOK, Material.ENCHANTED_BOOK, Material.FIREWORK, Material.FIREWORK_CHARGE, Material.POTION);
-	
-	public static final String hiddenRuleSpacer = "ง&ง&ง&ง&งr";
-	public static final String hiddenCategorySpacer = "ง&ง&ง&งr";
-	public static final String hiddenSecondarySpacer = "ง&ง&งr";
-	public static final String hiddenTertiarySpacer = "ง&งr";
-	
+	// ------------------------------------------------------------
+	//					  Static Functionality
+	// ------------------------------------------------------------
+	private static final List<Material> NOT_SUPPORTED = Arrays.asList(
+			Material.MAP,
+			Material.WRITTEN_BOOK,
+			Material.ENCHANTED_BOOK,
+			Material.FIREWORK,
+			Material.FIREWORK_CHARGE);
+
 	public static final String ruleSpacer = "&&&&r";
 	public static final String categorySpacer = "&&&r";
 	public static final String secondarySpacer = "&&r";
 	public static final String tertiarySpacer = "&r";
 
+	public static final String hiddenRuleSpacer = hideString(ruleSpacer);
+	public static final String hiddenCategorySpacer = hideString(categorySpacer);
+	public static final String hiddenSecondarySpacer = hideString(secondarySpacer);
+	public static final String hiddenTertiarySpacer = hideString(tertiarySpacer);
 
-	private Material material;
-	private int amount;
-	private short durability;
-	private Map<Enchantment, Integer> requiredEnchantments;
-	private List<Enchantment> excludedEnchantments;
-	private boolean unlistedEnchantmentsAllowed;
-	private String displayName;
-	private String[] lore;
-	private RuleType ruleType;
-	private AdditionalMetadata additional = null;
-	private Group citadelGroup = null;
+	public static enum RuleType { INPUT, OUTPUT }
 
-	/*
-	 * Describes whether the Exchange Rule functions as an input or an output
-	 */
-	public static enum RuleType {
-		INPUT, OUTPUT
+	public static boolean useHiddenSpacers = true;
+	public static String GetAppropriateSpacer(int nested) {
+		if (useHiddenSpacers == true) {
+			switch (nested) {
+				case 0: return hiddenRuleSpacer;
+				case 1: return hiddenCategorySpacer;
+				case 2: return hiddenSecondarySpacer;
+				case 3: return hiddenTertiarySpacer;
+				default: return "";
+			}
+		}
+		else {
+			switch (nested) {
+				case 0: return ruleSpacer;
+				case 1: return categorySpacer;
+				case 2: return secondarySpacer;
+				case 3: return tertiarySpacer;
+				default: return "";
+			}
+		}
 	}
 
-	public ExchangeRule(Material material, int amount, short durability, RuleType ruleType) {
-		this(material, amount, durability, new HashMap<Enchantment, Integer>(), new ArrayList<Enchantment>(), false, "", new String[0], ruleType);
+	// Will prepend a ยง to each character in a string
+	// therefore hiding it.
+	public static String hideString(String string) {
+		String hiddenString = "";
+		for (char character : string.toCharArray())
+			hiddenString += "ยง" + character;
+		return hiddenString;
 	}
 
-	public ExchangeRule(Material material, int amount, short durability, Map<Enchantment, Integer> requiredEnchantments, List<Enchantment> excludedEnchantments, boolean otherEnchantmentsAllowed, String displayName, String[] lore, RuleType ruleType) {
+	// Assuming the string was hidden using hideString
+	// it will take every other character and return.
+	// "ยงhยงeยงlยงlยงoยง ยงwยงoยงrยงlยงd" => "hello world"
+	public static String unhideString(String string) {
+		StringBuilder result = new StringBuilder();
+		char[] chars = string.toCharArray();
+		for(int i = 1; i < chars.length; i += 2)
+			result.append(chars[i]);
+		return result.toString();
+	}
+
+	// Escapes all 'r' and '\' characters in a string
+	public static String escapeString(String string) {
+		return string.replaceAll("([\\\\r])", "\\\\$1");
+	}
+
+	// Unescapes all 'r' and '\' characters in a string
+	public static String unescapeString(String string) {
+		return string.replaceAll("\\\\([\\\\r])", "$1");
+	}
+
+	// Checks whether an item is a valid rule block by
+	// checking to see if it can be successfully parsed
+	public static boolean isRuleBlock(ItemStack item) {
+		try {
+			ExchangeRule.parseBulkRuleBlock(item);
+			return true;
+		}
+		catch(ExchangeRuleParseException e) {
+			try {
+				ExchangeRule.parseRuleBlock(item);
+				return true;
+			}
+			catch(ExchangeRuleParseException e2) {
+				return false;
+			}
+		}
+	}
+
+	// Converts a raw rule string into an ExchangeRule
+	public static ExchangeRule parseRuleString(String ruleString) throws ExchangeRuleParseException {
+		try {
+			ExchangeRule exchangeRule = new ExchangeRule();
+			// Order in array
+			// ------------------------------
+			//  0 - Type (Input / Output)
+			//  1 - Kind (Should be "item")
+			//  2 - Item ID
+			//  3 - Durability
+			//  4 - Amount
+			//  5 - RequiredEnchantments[]
+			//  6 - ExcludedEnchantments[]
+			//  7 - AllowUnlistedEnchantments
+			//  8 - ItemName
+			//  9 - DisplayName
+			// 10 - Lore
+			// 11 - AdditionalMeta
+			// 12 - Group
+			// ------------------------------
+			// Check if the ruleBlock is correct
+			String[] compiledRule = ruleString.split(GetAppropriateSpacer(1), -1);
+			if (compiledRule.length != 13) {
+				throw new ExchangeRuleParseException(
+						"Compiled rule has incorrect length: " +
+						String.valueOf(compiledRule.length));
+			}
+			// Get the type of rule
+			String ruleTypeString = unhideString(compiledRule[0]);
+				 if (ruleTypeString.equals("i")) exchangeRule.ruleType = RuleType.INPUT;
+			else if (ruleTypeString.equals("o")) exchangeRule.ruleType = RuleType.OUTPUT;
+			else throw new ExchangeRuleParseException("Invalid rule type");
+			// Ensure that the transaction is for an item
+			if (!unhideString(compiledRule[1]).equals("item"))
+				throw new ExchangeRuleParseException("Invalid transaction type");
+			// Get the Material by its ID (deprecated, but changing would require
+			// a rewrite that will make all current rule buttons non-functional)
+			int materialID = Integer.valueOf(unhideString(compiledRule[2]));
+			exchangeRule.material = DeprecatedMethods.getMaterialById(materialID);
+			if (exchangeRule.material == null)
+				throw new ExchangeRuleParseException("Invalid material type");
+			// Get the durability
+			exchangeRule.durability = Short.valueOf(unhideString(compiledRule[3]));
+			if (exchangeRule.durability < 0) exchangeRule.durability = 0;
+			// Get the amount of items
+			exchangeRule.amount = Integer.parseInt(unhideString(compiledRule[4]));
+			if (exchangeRule.amount < 1) exchangeRule.amount = 1;
+			// Get the required enchantments
+			exchangeRule.requiredEnchantments = new HashMap<>();
+			for (String compiledEnchant : compiledRule[5].split(GetAppropriateSpacer(2))) {
+				// If enchant is nothing, then skip
+				if (compiledEnchant.isEmpty()) continue;
+				// Otherwise parse this enchantment
+				String[] enchantmentData = compiledEnchant.split(GetAppropriateSpacer(3));
+				Integer enchantmentId = Integer.valueOf(unhideString(enchantmentData[0]));
+				Integer enchantmentLevel = Integer.valueOf(unhideString(enchantmentData[1]));
+				Enchantment enchantment = DeprecatedMethods.getEnchantmentById(enchantmentId);
+				exchangeRule.requiredEnchantments.put(enchantment, enchantmentLevel);
+			}
+			// Get the excluded enchantments
+			exchangeRule.excludedEnchantments = new ArrayList<>();
+			for (String compiledEnchant : compiledRule[6].split(GetAppropriateSpacer(2))) {
+				// If enchant is nothing, then skip
+				if (compiledEnchant.isEmpty()) continue;
+				// Otherwise parse this enchantment
+				String[] enchantmentData = compiledEnchant.split(GetAppropriateSpacer(3));
+				Integer enchantmentId = Integer.valueOf(unhideString(enchantmentData[0]));
+				Enchantment enchantment = DeprecatedMethods.getEnchantmentById(enchantmentId);
+				exchangeRule.excludedEnchantments.add(enchantment);
+			}
+			// Get whether unlisted enchantments are allowed
+			String aueString = unhideString(compiledRule[7]);
+				 if (aueString.equals("0")) exchangeRule.unlistedEnchantmentsAllowed = false;
+			else if (aueString.equals("1")) exchangeRule.unlistedEnchantmentsAllowed = true;
+			else throw new ExchangeRuleParseException("Invalid unlisted allowance type");
+			// Get the item's name
+			exchangeRule.itemName = compiledRule[8];
+			if (!exchangeRule.itemName.isEmpty())
+				exchangeRule.itemName = unescapeString(unhideString(exchangeRule.itemName));
+			// Get the item's DisplayName
+			exchangeRule.displayName = compiledRule[9];
+			if (!exchangeRule.displayName.isEmpty())
+				exchangeRule.displayName = unescapeString(unhideString(exchangeRule.displayName));
+			// Get the item's Lore
+			exchangeRule.lore = new String[0];
+			if (!compiledRule[10].isEmpty()) {
+				exchangeRule.lore = compiledRule[10].split(GetAppropriateSpacer(2), -1);
+				for(int i = 0; i < exchangeRule.lore.length; i++)
+					exchangeRule.lore[i] = unhideString(unescapeString(exchangeRule.lore[i]));
+			}
+			// Get any additional meta
+			exchangeRule.additional = null;
+			if (!compiledRule[11].isEmpty()) {
+				String metaString = unhideString(compiledRule[11]);
+				switch (exchangeRule.material) {
+					case WRITTEN_BOOK: exchangeRule.additional = BookMetadata.deserialize(metaString); break;
+					case ENCHANTED_BOOK: exchangeRule.additional = EnchantmentStorageMetadata.deserialize(metaString); break;
+					case POTION: exchangeRule.additional = PotionMetadata.deserialize(metaString); break;
+					default: break;
+				}
+			}
+			// Get the group
+			exchangeRule.citadelGroup = null;
+			if (!compiledRule[12].isEmpty())
+				exchangeRule.citadelGroup = GroupManager.getGroup(unescapeString(unhideString(compiledRule[12])));
+			// And return the rule
+			return exchangeRule;
+		}
+		// If any of the above code fails, then it's an invalid rule string
+		catch (Exception e) {
+			throw new ExchangeRuleParseException("Unable to parse exchange rule. (" + e.getMessage() + " - " + e.getLocalizedMessage() + ")");
+		}
+	}
+
+	// Extracts the raw rule string from a rule block and attempts to parse it
+	public static ExchangeRule parseRuleBlock(ItemStack ruleBlock) throws ExchangeRuleParseException {
+		// Uhhh, is this try catch really necessary?
+		// It will just catch the generic error from the parse
+		// and generates a new, identical error in its place..
+		try {
+			return parseRuleString(ruleBlock.getItemMeta().getLore().get(0));
+		}
+		catch(Exception e) {
+			throw new ExchangeRuleParseException("Invalid exchange rule block. (" + e.getMessage() + ")");
+		}
+	}
+
+	// Extracts the raw rule strings from a bulk rule block and attempts to parse them
+	public static ExchangeRule[] parseBulkRuleBlock(ItemStack ruleBlock) throws ExchangeRuleParseException {
+		try {
+			// Extract the rule strings
+			String[] rules = ruleBlock.getItemMeta().getLore().get(1).split(GetAppropriateSpacer(0));
+			// And attempt to parse them
+			List<ExchangeRule> ruleList = new ArrayList<>();
+			for(String rule : rules) ruleList.add(parseRuleString(rule));
+			// And return the resulting rules
+			return ruleList.toArray(new ExchangeRule[0]);
+			// Apparently, this part here ^ is necessary as a type cast, see below
+			// https://stackoverflow.com/questions/5374311/convert-arrayliststring-to-string-array
+			// Weird...
+		}
+		catch(Exception e) {
+			throw new ExchangeRuleParseException("Invalid bulk exchange rule block. (" + e.getMessage() + ")");
+		}
+	}
+
+	//
+	public static ExchangeRule createRuleFromItem(ItemStack itemStack, RuleType ruleType) throws ExchangeRuleCreateException {
+		ExchangeRule exchangeRule = new ExchangeRule();
+		// Set basic data
+		exchangeRule.material = itemStack.getType();
+		exchangeRule.amount = itemStack.getAmount();
+		exchangeRule.durability = itemStack.getDurability();
+		exchangeRule.ruleType = ruleType;
+		// Check if material is on blacklist
+		if(NOT_SUPPORTED.contains(exchangeRule.material)) {
+			throw new ExchangeRuleCreateException("This material is not supported.");
+		}
+		// Set the item name of the item stack
+		exchangeRule.itemName = ItemUtility.getItemStackName(itemStack);
+		if (itemStack.hasItemMeta()) {
+			ItemMeta itemMeta = itemStack.getItemMeta();
+			// Set the display name of the item, if it has one
+			if (itemMeta.hasDisplayName())
+				exchangeRule.displayName = itemMeta.getDisplayName();
+			// Set the lore of the item, it it has any
+			if (itemMeta.hasLore())
+				exchangeRule.lore = itemMeta.getLore().toArray(new String[0]);
+			// Get addition meta from specific types
+			if(itemMeta instanceof BookMeta) {
+				exchangeRule.additional = new BookMetadata((BookMeta) itemMeta);
+			}
+			else if(itemMeta instanceof EnchantmentStorageMeta) {
+				exchangeRule.additional = new EnchantmentStorageMetadata((EnchantmentStorageMeta) itemMeta);
+			}
+			else if(itemMeta instanceof PotionMeta) {
+				PotionMeta potMeta = (PotionMeta) itemMeta;
+				PotionData potData = potMeta.getBasePotionData();
+				exchangeRule.itemName = PotionUtility.getPotionNameByEffect(potData);
+				exchangeRule.additional = new PotionMetadata(potMeta);
+				exchangeRule.useDisplayNameAsItemName();
+			}
+			// If the item has any of the following meta types
+			// the item is not supported, so error out
+			if (itemMeta instanceof FireworkEffectMeta ||
+				itemMeta instanceof FireworkMeta ||
+				itemMeta instanceof LeatherArmorMeta ||
+				itemMeta instanceof MapMeta ||
+				itemMeta instanceof SkullMeta) {
+				throw new ExchangeRuleCreateException(
+						"This item is not yet supported by ItemExchange.");
+			}
+		}
+		exchangeRule.requiredEnchantments = new HashMap<>();
+		for (Enchantment enchantment : itemStack.getEnchantments().keySet())
+			exchangeRule.requiredEnchantments.put(
+					enchantment, itemStack.getEnchantments().get(enchantment));
+		exchangeRule.excludedEnchantments = new ArrayList<>();
+		exchangeRule.unlistedEnchantmentsAllowed = false;
+		// And return the rule
+		return exchangeRule;
+	}
+
+	public static ExchangeRule createRuleFromString(String[] args) throws ExchangeRuleCreateException {
+		try {
+			// Order in array
+			// ------------------------------
+			//  0 - Type (Input / Output)
+			//  1 - Item ID
+			//  2 - Amount
+			// ------------------------------
+			// Get the type of rule
+			RuleType ruleType; String ruleTypeString = args[0];
+				 if (ruleTypeString.equals("input"))  ruleType = RuleType.INPUT;
+			else if (ruleTypeString.equals("output")) ruleType = RuleType.OUTPUT;
+			else throw new ExchangeRuleParseException("Invalid rule type");
+			// Basic rule data
+			Material material = null;
+			short durability = 0;
+			int amount = 1;
+			// If there are enough arguments, parse them
+			if (args.length > 1) {
+				String itemName = args[1].toLowerCase();
+				// If using item name, get details from cache
+				if (ItemExchangePlugin.NAME_MATERIAL.containsKey(itemName)) {
+					ItemStack itemStack = ItemExchangePlugin.NAME_MATERIAL.get(itemName);
+					material = itemStack.getType();
+					durability = itemStack.getDurability();
+				}
+				// Otherwise try to get item by id
+				else {
+					String[] idData = args[1].split(":");
+					int itemId = Integer.valueOf(idData[0]);
+					material = DeprecatedMethods.getMaterialById(itemId);
+					if (idData.length > 1) durability = Short.valueOf(idData[1]);
+				}
+				// Get amount, if present
+				if (args.length > 2) {
+					amount = Integer.valueOf(args[2]);
+					if (amount < 1) amount = 1;
+				}
+			}
+			// If no material is present, error out
+			if (material == null)
+				throw new ExchangeRuleParseException("No material present.");
+			// Create an item stack based on the data
+			ItemStack itemStack = new ItemStack(material, amount, durability);
+			// And attempt to create the rule block from that item stack
+			return createRuleFromItem(itemStack, ruleType);
+		}
+		catch (Exception e) {
+			throw new ExchangeRuleCreateException(
+					"Could not create an exchange rule with those parameters.");
+		}
+	}
+
+	// Convert many exchange rules into one bulk exchange rule
+	public static ItemStack toBulkItemStack(Collection<ExchangeRule> rules) {
+		// Generate a new rule button and get its meta
+		ItemStack itemStack = ItemExchangePlugin.ITEM_RULE_ITEMSTACK.clone();
+		ItemMeta itemMeta = itemStack.getItemMeta();
+		// Set the name
+		itemMeta.setDisplayName(ChatColor.DARK_RED + "Bulk Rule Block");
+		// Combine and set the individual rules
+		StringBuilder compiledRules = new StringBuilder();
+		Iterator<ExchangeRule> iterator = rules.iterator();
+		while(iterator.hasNext()) {
+			compiledRules.append(iterator.next().compileRule());
+			if(iterator.hasNext()) compiledRules.append(GetAppropriateSpacer(0));
+		}
+		// Set the lore based on the rules
+		List<String> newLore = new ArrayList<>();
+		newLore.add("This rule block holds " +
+				rules.size() + (rules.size() > 1 ? " exchange rules." : " exchange rule."));
+		newLore.add(compiledRules.toString());
+		itemMeta.setLore(newLore);
+		// Save the meta and return
+		itemStack.setItemMeta(itemMeta);
+		return itemStack;
+	}
+
+	// ------------------------------------------------------------
+	//					 Instance Functionality
+	// ------------------------------------------------------------
+	private Material 					material = null;
+	private int 						amount = 0;
+	private short 						durability = 0;
+	private Map<Enchantment, Integer> 	requiredEnchantments = new HashMap<>();
+	private List<Enchantment> 			excludedEnchantments = new ArrayList<>();
+	private boolean 					unlistedEnchantmentsAllowed = false;
+	private String						itemName = "";
+	private String 						displayName = "";
+	private String[] 					lore = new String[0];
+	private RuleType 					ruleType = null;
+	private AdditionalMetadata 			additional = null;
+	private Group 						citadelGroup = null;
+
+	private ExchangeRule() {}
+
+	// Short Constructor
+	public ExchangeRule(
+			Material material,
+			int amount,
+			short durability,
+			RuleType ruleType) {
+		this(
+			material,
+			amount,
+			durability,
+			new HashMap<>(),
+			new ArrayList<>(),
+			false,
+			"",
+			new String[0],
+			ruleType);
+	}
+
+	// Full Constructor
+	public ExchangeRule(
+			Material material,
+			int amount,
+			short durability,
+			Map<Enchantment, Integer> requiredEnchantments,
+			List<Enchantment> excludedEnchantments,
+			boolean otherEnchantmentsAllowed,
+			String displayName,
+			String[] lore,
+			RuleType ruleType) {
+		// Set all the relevant data
 		this.material = material;
 		this.amount = amount;
 		this.durability = durability;
 		this.requiredEnchantments = requiredEnchantments;
 		this.excludedEnchantments = excludedEnchantments;
 		this.unlistedEnchantmentsAllowed = otherEnchantmentsAllowed;
+		this.itemName = ItemUtility.getItemStackName(material, durability);
 		this.displayName = displayName;
 		this.lore = lore;
 		this.ruleType = ruleType;
 	}
 
-	public void setAdditionalMetadata(AdditionalMetadata meta) {
-		this.additional = meta;
-	}
-
-	/*
-	 * Parses an ItemStack into an ExchangeRule which represents that ItemStack
-	 */
-	public static ExchangeRule parseItemStack(ItemStack itemStack, RuleType ruleType) throws ExchangeRuleCreateException {
-		Map<Enchantment, Integer> requiredEnchantments = new HashMap<Enchantment, Integer>();
-		for (Enchantment enchantment : itemStack.getEnchantments().keySet()) {
-			requiredEnchantments.put(enchantment, itemStack.getEnchantments().get(enchantment));
-		}
-		String displayName = "";
-		String[] lore = new String[0];
-		AdditionalMetadata additional = null;
-		if (itemStack.hasItemMeta()) {
-			ItemMeta itemMeta = itemStack.getItemMeta();
-			if (itemMeta.hasDisplayName()) {
-				displayName = itemMeta.getDisplayName();
-			}
-			if (itemMeta.hasLore()) {
-				lore = itemMeta.getLore().toArray(new String[itemMeta.getLore().size()]);
-			}
-
-			if(itemMeta instanceof BookMeta) {
-				additional = new BookMetadata((BookMeta) itemMeta);
-			}
-			else if(itemMeta instanceof EnchantmentStorageMeta) {
-				additional = new EnchantmentStorageMetadata((EnchantmentStorageMeta) itemMeta);
-			}
-			else if(itemMeta instanceof PotionMeta) {
-				additional = new PotionMetadata((PotionMeta) itemMeta);
-			}
-			//I've removed the PotionMeta block since it is not required if only vanilla potions are used, PotionMeta support should be added in the future
-			if(itemMeta instanceof FireworkEffectMeta || itemMeta instanceof FireworkMeta || itemMeta instanceof LeatherArmorMeta || itemMeta instanceof MapMeta || itemMeta instanceof SkullMeta) {
-				throw new ExchangeRuleCreateException("This item is not yet supported by ItemExchange.");
-			}
-		}
-
-		ExchangeRule exchangeRule = new ExchangeRule(itemStack.getType(), itemStack.getAmount(), itemStack.getDurability(), requiredEnchantments, new ArrayList<Enchantment>(), false, displayName, lore, ruleType);
-
-		exchangeRule.setAdditionalMetadata(additional);
-
-		return exchangeRule;
-	}
-
-	public static ExchangeRule[] parseBulkRuleBlock(ItemStack ruleBlock) throws ExchangeRuleParseException {
-		try {
-			String[] rules = ruleBlock.getItemMeta().getLore().get(1).split(hiddenRuleSpacer);
-
-			List<ExchangeRule> ruleList = new ArrayList<ExchangeRule>();
-
-			for(String rule : rules) {
-				ruleList.add(parseRuleString(rule));
-			}
-
-			return ruleList.toArray(new ExchangeRule[0]);
-		}
-		catch(Exception e) {
-			throw new ExchangeRuleParseException("Invalid Exchange Rule");
-		}
-	}
-
-	/*
-	 * Parses an RuleBlock into an ExchangeRule It uses the escape character to
-	 * hide the information being stored from being visible to the character. It
-	 * also includes an easily read but not parse version of the rule for the
-	 * player. Might fail if the display name contains an &.
-	 */
-	public static ExchangeRule parseRuleBlock(ItemStack ruleBlock) throws ExchangeRuleParseException {
-		try {
-			return parseRuleString(ruleBlock.getItemMeta().getLore().get(0));
-		}
-		catch(Exception e) {
-			throw new ExchangeRuleParseException("Invalid exchange rule");
-		}
-	}
-
-	public static ExchangeRule parseRuleString(String ruleString) throws ExchangeRuleParseException {
-		try {
-			// [Type,Material
-			// ID,Durability,Amount,RequiredEnchantments[],ExcludedEnchantments[],UnlistedEnchantments[],DisplayName,Lore]
-			String[] compiledRule = ruleString.split(hiddenCategorySpacer);
-			// Check length is correct
-			if (compiledRule.length < 12) {
-				throw new ExchangeRuleParseException("Compiled rule too short: " + String.valueOf(compiledRule.length));
-			}
-			// Get Rule Type
-			RuleType ruleType;
-			if (showString(compiledRule[0]).equals("i")) {
-				ruleType = RuleType.INPUT;
-			}
-			else if (showString(compiledRule[0]).equals("o")) {
-				ruleType = RuleType.OUTPUT;
-			}
-			else {
-				throw new ExchangeRuleParseException("Invalid rule type");
-			}
-
-			String transactionType = showString(compiledRule[1]);
-
-			if(!transactionType.equals("item")) {
-				throw new ExchangeRuleParseException("Invalid transaction type");
-			}
-
-			// Get Material
-			Material material = DeprecatedMethods.getMaterialById(Integer.valueOf(showString(compiledRule[2])));
-			// Get Durability
-			short durability = Short.valueOf(showString(compiledRule[3]));
-			// Get Amount
-			int amount = Integer.parseInt(showString(compiledRule[4]));
-			if (amount <= 0) {
-				amount = 1;
-			}
-			// Get Required Enchantments
-			Map<Enchantment, Integer> requiredEnchantments = new HashMap<Enchantment, Integer>();
-			for (String compiledEnchant : compiledRule[5].split(hiddenSecondarySpacer)) {
-				if (compiledEnchant.equals("")) {
-					continue;
-				}
-				Enchantment enchantment = DeprecatedMethods.getEnchantmentById(Integer.valueOf(showString(compiledEnchant.split(hiddenTertiarySpacer)[0])));
-				Integer level = Integer.valueOf(showString(compiledEnchant.split(hiddenTertiarySpacer)[1]));
-				requiredEnchantments.put(enchantment, level);
-			}
-
-			// Get Excluded Enchantments
-			List<Enchantment> excludedEnchantments = new ArrayList<Enchantment>();
-			for (String compiledEnchant : compiledRule[6].split(hiddenSecondarySpacer)) {
-				if (compiledEnchant.equals("")) {
-					continue;
-				}
-				Enchantment enchantment = DeprecatedMethods.getEnchantmentById(Integer.valueOf(showString(compiledEnchant)));
-				excludedEnchantments.add(enchantment);
-			}
-			// Get if unlisted enchantments are allowed
-			boolean unlistedEnchantmentsAllowed;
-			if (showString(compiledRule[7]).equals("0")) {
-				unlistedEnchantmentsAllowed = false;
-			}
-			else if (showString(compiledRule[7]).equals("1")) {
-				unlistedEnchantmentsAllowed = true;
-			}
-			else {
-				throw new ExchangeRuleParseException("Invalid Rule Type");
-			}
-			// Get DisplayName
-			String displayName = "";
-			if (!compiledRule[8].equals("")) {
-				displayName = unescapeString(showString(compiledRule[8]));
-			}
-			// Get Lore
-			String[] lore = new String[0];
-			if (!compiledRule[9].equals("")) {
-				lore = showString(compiledRule[9]).split(secondarySpacer);
-				
-				for(int i = 0; i < lore.length; i++) {
-					lore[i] = unescapeString(lore[i]);
-				}
-			}
-
-			AdditionalMetadata additional = null;
-
-			if(material == Material.WRITTEN_BOOK) {
-				additional = BookMetadata.deserialize(showString(compiledRule[10]));
-			}
-			else if(material == Material.ENCHANTED_BOOK) {
-				additional = EnchantmentStorageMetadata.deserialize(showString(compiledRule[10]));
-			}
-			else if(material == Material.POTION) {
-				if(!compiledRule[10].isEmpty()) {
-					additional = PotionMetadata.deserialize(showString(compiledRule[10]));
-				}
-			}
-
-			Group group;
-
-			if(!compiledRule[11].equals("")) {
-				group = GroupManager.getGroup(unescapeString(showString(compiledRule[11])));
-			}
-			else {
-				group = null;
-			}
-
-			ExchangeRule exchangeRule = new ExchangeRule(material, amount, durability, requiredEnchantments, excludedEnchantments, unlistedEnchantmentsAllowed, displayName, lore, ruleType);
-
-			exchangeRule.setAdditionalMetadata(additional);
-			exchangeRule.setCitadelGroup(group);
-
-			return exchangeRule;
-		}
-		catch (Exception e) {
-			throw new ExchangeRuleParseException("Invalid Exchange Rule");
-		}
-	}
-
-	/*
-	 * Removes every other character from a string
-	 */
-	private static String showString(String string) {
-		StringBuilder result = new StringBuilder();
-		
-		char[] chars = string.toCharArray();
-		
-		for(int i = 1; i < chars.length; i += 2) {
-			result.append(chars[i]);
-		}
-		
-		return result.toString();
-	}
-
-	/*
-	 * Adds a ง in front of every character in a string
-	 */
-	private static String hideString(String string) {
-		String hiddenString = "";
-		for (char character : string.toCharArray()) {
-			hiddenString += "ง" + character;
-		}
-		return hiddenString;
-	}
-	
-	/*
-	 * Escapes all 'r' and '\' characters in a string
-	 */
-	private static String escapeString(String string) {
-		return string.replaceAll("([\\\\r])", "\\\\$1");
-	}
-	
-	/*
-	 * Un-escapes all 'r' and '\' characters in a string
-	 */
-	private static String unescapeString(String string) {
-		return string.replaceAll("\\\\([\\\\r])", "$1");
-	}
-
-	/*
-	 * Parse create command into an exchange rule
-	 */
-	public static ExchangeRule parseCreateCommand(String[] args) throws ExchangeRuleParseException {
-		try {
-			// Parse ruletype
-			RuleType ruleType = null;
-			if (args[0].equalsIgnoreCase("input")) {
-				ruleType = ExchangeRule.RuleType.INPUT;
-			}
-			else if (args[0].equalsIgnoreCase("output")) {
-				ruleType = ExchangeRule.RuleType.OUTPUT;
-			}
-			if (ruleType != null) {
-				Material material = null;
-				short durability = 0;
-				int amount = 1;
-				if (args.length >= 2) {
-					if (ItemExchangePlugin.NAME_MATERIAL.containsKey(args[1].toLowerCase())) {
-						ItemStack itemStack = ItemExchangePlugin.NAME_MATERIAL.get(args[1].toLowerCase());
-						material = itemStack.getType();
-						durability = itemStack.getDurability();
-					}
-					else {
-						String[] split = args[1].split(":");
-						material = DeprecatedMethods.getMaterialById(Integer.valueOf(split[0]));
-						if (split.length > 1) {
-							durability = Short.valueOf(split[1]);
-						}
-					}
-					if (args.length == 3) {
-						amount = Integer.valueOf(args[2]);
-						if (amount <= 0) {
-							amount = 1;
-						}
-					}
-				}
-				
-				if(NOT_SUPPORTED.contains(material)) {
-					throw new ExchangeRuleParseException("This material is not supported.");
-				}
-				
-				return new ExchangeRule(material, amount, durability, ruleType);
-			}
-			else {
-				throw new ExchangeRuleParseException("Please specify an input or output.");
-			}
-		}
-		catch (Exception e) {
-			throw new ExchangeRuleParseException("Invalid exchange rule.");
-		}
-	}
-
-	public static ItemStack toBulkItemStack(Collection<ExchangeRule> rules) {
-		ItemStack itemStack = ItemExchangePlugin.ITEM_RULE_ITEMSTACK.clone();
-
-		String ruleSpacer = "ง&ง&ง&ง&งr";
-
-		ItemMeta itemMeta = itemStack.getItemMeta();
-		itemMeta.setDisplayName(ChatColor.DARK_RED + "Bulk Rule Block");
-		List<String> newLore = new ArrayList<String>();
-
-		StringBuilder compiledRules = new StringBuilder();
-
-		Iterator<ExchangeRule> iterator = rules.iterator();
-
-		while(iterator.hasNext()) {
-			compiledRules.append(iterator.next().compileRule());
-
-			if(iterator.hasNext())
-				compiledRules.append(ruleSpacer);
-		}
-
-		newLore.add("This rule block holds " + rules.size() + (rules.size() > 1 ? " exchange rules." : " exchange rule."));
-		newLore.add(compiledRules.toString());
-
-		itemMeta.setLore(newLore);
-		itemStack.setItemMeta(itemMeta);
-		return itemStack;
-	}
-
-	/*
-	 * Stores the exchange rule as an item stack
-	 */
+	// Convert this ExchangeRule into an item version of itself
 	public ItemStack toItemStack() {
+		// Generate a new rule button and get its meta
 		ItemStack itemStack = ItemExchangePlugin.ITEM_RULE_ITEMSTACK.clone();
-
 		ItemMeta itemMeta = itemStack.getItemMeta();
+		// Set the name
 		itemMeta.setDisplayName(displayedItemStackInfo());
-		List<String> newLore = new ArrayList<String>();
-		if(ItemExchangePlugin.ENCHANTABLE_ITEMS.contains(material)) {
+		// Create new lore
+		List<String> newLore = new ArrayList<>();
+		// Add enchantments to lore, if present
+		if(ItemExchangePlugin.ENCHANTABLE_ITEMS.contains(material))
 			newLore.add(displayedEnchantments());
-		}
-		
+		// Add display info to lore
 		for (String line : displayedLore()) {
 			newLore.add(line);
 		}
-		
+		// Mention Citadel restriction, if present
 		if(citadelGroup != null) {
 			newLore.add(ChatColor.RED + "Restricted with Citadel.");
 		}
-		
-		if(newLore.size() > 0) {
-			newLore.set(0, compileRule() + newLore.get(0));
-		}
-		else {
-			newLore.add(compileRule());
-		}
-		
+		// If lore is still empty, just add rules, otherwise
+		// prepend the rules to the lore.
+		newLore.add(0, compileRule());
+
+		// Save the meta and return
 		itemMeta.setLore(newLore);
 		itemStack.setItemMeta(itemMeta);
 		return itemStack;
 	}
 
-	/*
-	 * Saves the exchange rule to lore in a semi-readable fashion
-	 */
+	// Encode the rules into a string
 	public String compileRule() {
+		// Order in array
+		// ------------------------------
+		//  0 - Type (Input / Output)
+		//  1 - Kind (Should be "item")
+		//  2 - Item ID
+		//  3 - Durability
+		//  4 - Amount
+		//  5 - RequiredEnchantments[]
+		//  6 - ExcludedEnchantments[]
+		//  7 - AllowUnlistedEnchantments
+		//  8 - ItemName
+		//  9 - DisplayName
+		// 10 - Lore
+		// 11 - AdditionalMeta
+		// 12 - Group
+		// ------------------------------
 		String compiledRule = "";
 		// RuleType
 		compiledRule += ruleType.equals(RuleType.INPUT) ? hideString("i") : hideString("o");
+		compiledRule += GetAppropriateSpacer(1);
 		// Transaction type
-		compiledRule += hiddenCategorySpacer + hideString("item");
-		// Material ID
-		compiledRule += hiddenCategorySpacer + hideString(String.valueOf(DeprecatedMethods.getMaterialId(material)));
+		compiledRule += hideString("item");
+		compiledRule += GetAppropriateSpacer(1);
+		// Item ID
+		compiledRule += hideString(String.valueOf(DeprecatedMethods.getMaterialId(material)));
+		compiledRule += GetAppropriateSpacer(1);
 		// Durability
-		compiledRule += hiddenCategorySpacer + hideString(String.valueOf(durability));
+		compiledRule += hideString(String.valueOf(durability));
+		compiledRule += GetAppropriateSpacer(1);
 		// Amount
-		compiledRule += hiddenCategorySpacer + hideString(String.valueOf(amount));
-		compiledRule += hiddenCategorySpacer;
+		compiledRule += hideString(String.valueOf(amount));
+		compiledRule += GetAppropriateSpacer(1);
+		// Required Enchantments
 		boolean enchantable = ItemExchangePlugin.ENCHANTABLE_ITEMS.contains(material);
 		if(enchantable) {
 			for (Entry<Enchantment, Integer> entry : requiredEnchantments.entrySet()) {
-				compiledRule += hideString(String.valueOf(DeprecatedMethods.getEnchantmentId(entry.getKey()))) + hiddenTertiarySpacer + hideString(entry.getValue().toString()) + hiddenSecondarySpacer;
+				// Get basic enchantment data
+				String enchantId = String.valueOf(DeprecatedMethods.getEnchantmentId(entry.getKey()));
+				String enchantLevel = String.valueOf(entry.getValue());
+				// Add to encoded string
+				compiledRule += hideString(enchantId);
+				compiledRule += GetAppropriateSpacer(3);
+				compiledRule += hideString(enchantLevel);
+				compiledRule += GetAppropriateSpacer(2);
 			}
 		}
-		compiledRule += hiddenCategorySpacer;
+		compiledRule += GetAppropriateSpacer(1);
+		// Excluded Enchantments
 		if(enchantable) {
-			for (Enchantment enchantment : excludedEnchantments) {
-				compiledRule += hideString(String.valueOf(DeprecatedMethods.getEnchantmentId(enchantment))) + hiddenSecondarySpacer;
+			for (Enchantment entry : excludedEnchantments) {
+				// Get basic enchantment data
+				String enchantId = String.valueOf(DeprecatedMethods.getEnchantmentId(entry));
+				// Add to encoded string
+				compiledRule += hideString(enchantId);
+				compiledRule += GetAppropriateSpacer(2);
 			}
 		}
-		compiledRule += hiddenCategorySpacer + ((unlistedEnchantmentsAllowed && enchantable) ? hideString("1") : hideString("0"));
-		compiledRule += hiddenCategorySpacer + hideString(escapeString(displayName));
-		compiledRule += hiddenCategorySpacer;
+		compiledRule += GetAppropriateSpacer(1);
+		// Allow Unlisted Enchantments
+		compiledRule += (unlistedEnchantmentsAllowed && enchantable) ? hideString("1") : hideString("0");
+		compiledRule += GetAppropriateSpacer(1);
+		// ItemName
+		compiledRule += hideString(escapeString(itemName));
+		compiledRule += GetAppropriateSpacer(1);
+		// DisplayName
+		compiledRule += hideString(escapeString(displayName));
+		compiledRule += GetAppropriateSpacer(1);
+		// Lore
 		for (int i = 0; i < lore.length; i++) {
-			String line = lore[i];
-			
-			if(i > 0)
-				compiledRule += hiddenSecondarySpacer;
-			
-			compiledRule += hideString(escapeString(line));
+			compiledRule += hideString(escapeString(lore[i]));
+			if (i + 1 < lore.length)
+				compiledRule += GetAppropriateSpacer(2);
 		}
-		compiledRule += hiddenCategorySpacer;
+		compiledRule += GetAppropriateSpacer(1);
+		// AdditionalMeta
 		if(additional != null) {
 			compiledRule += hideString(additional.serialize());
 		}
-		compiledRule += hiddenCategorySpacer;
+		compiledRule += GetAppropriateSpacer(1);
+		// Citadel Group
 		if(citadelGroup != null) {
 			compiledRule += hideString(escapeString(citadelGroup.getName()));
 		}
-		compiledRule += hiddenCategorySpacer + "งr";
+		// Finish and return
 		return compiledRule;
 	}
 
-	public boolean followsRules(Player player) {
+	// Some transaction inputs have Citadel restrictions, so if
+	// a group is listed, check if the player is a member of it.
+	// If no group is listed, defaults to true.
+	public boolean canPlayerAccess(Player player) {
 		if(this.ruleType == RuleType.INPUT) {
 			if(citadelGroup != null) {
 				UUID playerId = player.getUniqueId();
-
-				if(citadelGroup.isMember(playerId)) {
-					return true;
-				}
-				else {
-					return false;
-				}
+				return citadelGroup.isMember(playerId);
 			}
 		}
-
 		return true;
 	}
 
-	/*
-	 * Checks if an inventory has enough items which follow the ItemRules
-	 */
-	public boolean followsRules(Inventory inventory) {
+	// Check how many transactions can take place with
+	// the current amount in inventory
+	public int possibleTransactionAmount(Inventory inventory) {
 		int invAmount = 0;
 		for (ItemStack itemStack : inventory.getContents()) {
-			if (itemStack != null && followsRules(itemStack)) {
+			if (itemStack != null && isRequiredItem(itemStack)) {
 				invAmount += itemStack.getAmount();
 			}
 		}
-		return invAmount >= amount;
-	}
-	
-	/*
-	 * Counts how many multiples of the specified item an inventory has.
-	 */
-	public int checkMultiples(Inventory inventory) {
-		int invAmount = 0;
-		for (ItemStack itemStack : inventory.getContents()) {
-			if (itemStack != null && followsRules(itemStack)) {
-				invAmount += itemStack.getAmount();
-			}
-		}
-		if (amount <= 0) {
-			return 0;
-		}
+		if (amount <= 0) return 0;
 		return invAmount / amount;
 	}
 
-	/*
-	 * Checks if the given ItemStack follows the ItemRules except for the amount
-	 */
-	public boolean followsRules(ItemStack itemStack) {
-		// check material type and druability
-		boolean followsRules = DeprecatedMethods.getMaterialId(material) == DeprecatedMethods.getItemId(itemStack)
-				&& durability == itemStack.getDurability();
-		
-		// Check enchantments
-		if (itemStack.getEnchantments().size() > 0) {
-			followsRules = followsRules && itemStack.getEnchantments().entrySet().containsAll(requiredEnchantments.entrySet());
-			for (Enchantment excludedEnchantment : excludedEnchantments) {
-				followsRules = followsRules && !itemStack.getEnchantments().entrySet().contains(excludedEnchantment);
-			}
-		}
-		else if (requiredEnchantments.size() > 0) {
-			followsRules = false;
-		}
-
-		if(additional != null)
-			followsRules = followsRules && additional.matches(itemStack);
-
-		// Check displayName and Lore
-		if (itemStack.hasItemMeta()) {
-			ItemMeta itemMeta = itemStack.getItemMeta();
-			if (itemMeta.hasDisplayName()) {
-				followsRules = followsRules && displayName.equals(itemMeta.getDisplayName());
-			}
-			else {
-				followsRules = followsRules && displayName.equals("");
-			}
-			if (itemMeta.hasLore()) {
-				for (int i = 0; i < itemMeta.getLore().size() && i < lore.length; i++) {
-					followsRules = followsRules && lore[i].equals(itemMeta.getLore().get(i));
-				}
-				followsRules = followsRules && itemMeta.getLore().size() == lore.length;
-			}
-			else {
-				followsRules = followsRules && lore.length == 0;
-			}
-		}
-		else {
-			followsRules = followsRules && displayName.equals("") && lore.length == 0;
-		}
-		return followsRules;
+	// Check whether inventory has the minimum amount of
+	// items to serve at least one transaction.
+	public boolean hasEnoughOfItem(Inventory inventory) {
+		return possibleTransactionAmount(inventory) > 0;
 	}
 
-	public String[] display(Player p) {
-		List<String> displayed = new ArrayList<String>();
-		// Material type, durability and amount
-		displayed.add(displayedItemStackInfo());
-		// Additional metadata (books, etc.)
-		if(additional != null) {
-			displayed.add(additional.getDisplayedInfo());
+	// Check whether an item fits the description in rules
+	public boolean isRequiredItem(ItemStack itemStack) {
+		ExchangeRule exchangeRule = null;
+		try {
+			exchangeRule = createRuleFromItem(itemStack, this.ruleType);
 		}
-
-		// Enchantments
-		if(ItemExchangePlugin.ENCHANTABLE_ITEMS.contains(material)) {
-			displayed.add(displayedEnchantments());
+		// If this errors, then it can't be the same
+		catch (ExchangeRuleCreateException e) {
+			return false;
 		}
+		// Check if null, just in case
+		if (exchangeRule == null) return false;
+		// Change the amount to match
+		exchangeRule.amount = this.amount;
+		// Now check if buttons are identical
+		// If it's the same item, they should be
+		String itemRule = exchangeRule.compileRule();
+		String shopRule = compileRule();
+		return itemRule.equals(shopRule);
+	}
 
+	// Get the shop display text for this exchange rule
+	public String[] showShopDisplay(Player player) {
+		List<String> display = new ArrayList<>();
+		// Add all the item's vanilla info
+		display.add(displayedItemStackInfo());
+		// Show addition meta (books, etc)
+		if (additional != null)
+			display.add(additional.getDisplayedInfo());
+		// Show enchantments
+		if(ItemExchangePlugin.ENCHANTABLE_ITEMS.contains(material))
+			display.add(displayedEnchantments());
 		// Lore
 		for(String line : displayedLore()) {
-			displayed.add(line);
+			display.add(line);
 		}
-
 		// Citadel group
 		if(citadelGroup != null) {
-			UUID playerId = p.getUniqueId();
-			
-			if(citadelGroup.isMember(playerId)) {
-				displayed.add(ChatColor.GREEN + "Restricted with Citadel. You have access to this shop.");
-			}
-			else {
-				displayed.add(ChatColor.RED + "Restricted with Citadel. You do not have access to this shop.");
-			}
+			UUID playerId = player.getUniqueId();
+			if(citadelGroup.isMember(playerId))
+				display.add(ChatColor.GREEN + "Restricted with Citadel. You have access to this shop.");
+			else
+				display.add(ChatColor.RED + "Restricted with Citadel. You do not have access to this shop.");
 		}
-
-		return displayed.toArray(new String[displayed.size()]);
+		// And return using the same weird type cast
+		return display.toArray(new String[0]);
 	}
 
 	private String displayedItemStackInfo() {
-		StringBuilder stringBuilder = new StringBuilder().append(ChatColor.YELLOW).append((ruleType == RuleType.INPUT ? "Input" : "Output") + ": " + ChatColor.WHITE).append(amount);
-		if (ItemExchangePlugin.MATERIAL_NAME.containsKey(new ItemStack(material, 1, durability))) {
-			stringBuilder.append(" " + ItemExchangePlugin.MATERIAL_NAME.get(new ItemStack(material, 1, durability)));
-		}
-		else {
-			stringBuilder.append(material.name() + ":").append(durability);
-		}
-		stringBuilder.append(displayName.equals("") ? "" : " \"" + displayName + "\"");
-		return stringBuilder.toString();
+		StringBuilder info = new StringBuilder();
+		info
+			.append(ChatColor.YELLOW)
+			.append((ruleType == RuleType.INPUT ? "Input" : "Output") + " ")
+			.append(ChatColor.WHITE)
+			.append(amount).append(" ")
+			.append(itemName);
+		// Get and display item name
+		if (!displayName.isEmpty())
+			info.append(" \"" + displayName + "\"");
+		// Return data
+		return info.toString();
 	}
 
 	private String displayedEnchantments() {
@@ -668,16 +714,17 @@ public class ExchangeRule {
 		}
 	}
 
+	// SETTERS
 	public void setMaterial(Material material) {
 		this.material = material;
 	}
 
-	public void setUnlistedEnchantmentsAllowed(boolean allowed) {
-		this.unlistedEnchantmentsAllowed = allowed;
+	public void setAmount(int amount) {
+		this.amount = amount;
 	}
 
-	public boolean getUnlistedEnchantmentsAllowed() {
-		return unlistedEnchantmentsAllowed;
+	public void setDurability(short durability) {
+		this.durability = durability;
 	}
 
 	public void requireEnchantment(Enchantment enchantment, Integer level) {
@@ -697,17 +744,25 @@ public class ExchangeRule {
 		excludedEnchantments.remove(enchantment);
 	}
 
-	public void setAmount(int amount) {
-		this.amount = amount;
+	public void setUnlistedEnchantmentsAllowed(boolean allowed) {
+		this.unlistedEnchantmentsAllowed = allowed;
 	}
 
-	public void setDurability(short durability) {
-		this.durability = durability;
+	public void setItemName(String itemName) {
+		this.itemName = itemName == null ? "" : itemName;
 	}
 
 	public void setDisplayName(String displayName) {
-		this.displayName = displayName;
+		this.displayName = displayName == null ? "" : displayName;
 	}
+
+	public void useDisplayNameAsItemName() {
+		if (this.displayName != null && !this.displayName.isEmpty()) {
+			this.itemName = this.displayName;
+			this.displayName = "";
+		}
+	}
+
 
 	public void setLore(String[] lore) {
 		this.lore = lore;
@@ -717,37 +772,28 @@ public class ExchangeRule {
 		ruleType = ruleType == RuleType.INPUT ? RuleType.OUTPUT : RuleType.INPUT;
 	}
 
-	public int getAmount() {
-		return amount;
+	public void setAdditionalMetadata(AdditionalMetadata meta) {
+		this.additional = meta;
 	}
 
 	public void setCitadelGroup(Group group) {
 		this.citadelGroup = group;
 	}
 
-	public Group getCitadelGroup() {
-		return citadelGroup;
+	// GETTERS
+	public int getAmount() {
+		return amount;
+	}
+
+	public boolean getUnlistedEnchantmentsAllowed() {
+		return unlistedEnchantmentsAllowed;
 	}
 
 	public RuleType getType() {
 		return ruleType;
 	}
 
-	public static boolean isRuleBlock(ItemStack item) {
-		try {
-			ExchangeRule.parseBulkRuleBlock(item);
-
-			return true;
-		}
-		catch(ExchangeRuleParseException e) {
-			try {
-				ExchangeRule.parseRuleBlock(item);
-
-				return true;
-			}
-			catch(ExchangeRuleParseException e2) {
-				return false;
-			}
-		}
+	public Group getCitadelGroup() {
+		return citadelGroup;
 	}
 }

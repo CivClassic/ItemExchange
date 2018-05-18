@@ -1,4 +1,10 @@
 Stone,,1,0
+Granite,,1,1
+Polished Granite,,1,2
+Diorite,,1,3
+Polished Diorite,,1,4
+Andesite,,1,5
+Polished Andesite,,1,6
 Grass Block,,2,0
 Dirt,,3,0
 Cobblestone,,4,0
@@ -235,22 +241,22 @@ Pillar Quartz Block,,155,2
 Quartz Stairs,,156,0
 Pressure Plate Rail,,157,0
 Dropper,,158,0
-White Stained Clay,,159,0
-Orange Stained Clay,,159,1
-Magenta Stained Clay,,159,2
-Light Blue Stained Clay,,159,3
-Yellow Stained Clay,,159,4
-Lime Stained Clay,,159,5
-Pink Stained Clay,,159,6
-Gray Stained Clay,,159,7
-Light Gray Stained Clay,,159,8
-Cyan Stained Clay,,159,9
-Purple Stained Clay,,159,10
-Blue Stained Clay,,159,11
-Brown Stained Clay,,159,12
-Green Stained Clay,,159,13
-Red Stained Clay,,159,14
-Black Stained Clay,,159,15
+White Terracotta,,159,0
+Orange Terracotta,,159,1
+Magenta Terracotta,,159,2
+Light Blue Terracotta,,159,3
+Yellow Terracotta,,159,4
+Lime Terracotta,,159,5
+Pink Terracotta,,159,6
+Gray Terracotta,,159,7
+Light Gray Terracotta,,159,8
+Cyan Terracotta,,159,9
+Purple Terracotta,,159,10
+Blue Terracotta,,159,11
+Brown Terracotta,,159,12
+Green Terracotta,,159,13
+Red Terracotta,,159,14
+Black Terracotta,,159,15
 Acacia Leaves,,161,0
 Dark Oak Leaves,,161,1
 Acacia Wood,,162,0
@@ -282,6 +288,54 @@ Double Tallgrass,,175,2
 Large Fern,,175,3
 Rose Bush,,175,4
 Peony,,175,5
+White Glazed Terracotta,,235,0
+Orange Glazed Terracotta,,236,0
+Magenta Glazed Terracotta,,237,0
+Light Blue Glazed Terracotta,,238,0
+Yellow Glazed Terracotta,,239,0
+Lime Glazed Terracotta,,240,0
+Pink Glazed Terracotta,,241,0
+Gray Glazed Terracotta,,242,0
+Light Gray Glazed Terracotta,,243,0
+Cyan Glazed Terracotta,,244,0
+Purple Glazed Terracotta,,245,0
+Blue Glazed Terracotta,,246,0
+Brown Glazed Terracotta,,247,0
+Green Glazed Terracotta,,248,0
+Red Glazed Terracotta,,249,0
+Black Glazed Terracotta,,250,0
+White Concrete,,251,0
+Orange Concrete,,251,1
+Magenta Concrete,,251,2
+Light Blue Concrete,,251,3
+Yellow Concrete,,251,4
+Lime Concrete,,251,5
+Pink Concrete,,251,6
+Gray Concrete,,251,7
+Light Gray Concrete,,251,8
+Cyan Concrete,,251,9
+Purple Concrete,,251,10
+Blue Concrete,,251,11
+Brown Concrete,,251,12
+Green Concrete,,251,13
+Red Concrete,,251,14
+Black Concrete,,251,15
+White Concrete Powder,,252,0
+Orange Concrete Powder,,252,1
+Magenta Concrete Powder,,252,2
+Light Blue Concrete Powder,,252,3
+Yellow Concrete Powder,,252,4
+Lime Concrete Powder,,252,5
+Pink Concrete Powder,,252,6
+Gray Concrete Powder,,252,7
+Light Gray Concrete Powder,,252,8
+Cyan Concrete Powder,,252,9
+Purple Concrete Powder,,252,10
+Blue Concrete Powder,,252,11
+Brown Concrete Powder,,252,12
+Green Concrete Powder,,252,13
+Red Concrete Powder,,252,14
+Black Concrete Powder,,252,15
 Iron Shovel,,256,0
 Iron Pickaxe,,257,0
 Iron Axe,,258,0
@@ -352,7 +406,7 @@ Painting,,321,0
 Golden Apple,,322,0
 Enchanted Golden Apple,,322,1
 Sign,,323,0
-Wooden Door,,324,0
+Oak Door,,324,0
 Bucket,,325,0
 Water Bucket,,326,0
 Lava Bucket,,327,0
@@ -361,7 +415,7 @@ Saddle,,329,0
 Iron Door,,330,0
 Redstone,,331,0
 Snowball,,332,0
-Boat,,333,0
+Oak Boat,,333,0
 Leather,,334,0
 Milk Bucket,,335,0
 Clay Brick,,336,0
@@ -402,7 +456,22 @@ Bone Meal,,351,15
 Bone,,352,0
 Sugar,,353,0
 Cake,,354,0
-Bed,,355,0
+White Bed,,355,0
+Orange Bed,,355,1
+Magenta Bed,,355,2
+Light Blue Bed,,355,3
+Yellow Bed,,355,4
+Lime Bed,,355,5
+Pink Bed,,355,6
+Gray Bed,,355,7
+Light Gray Bed,,355,8
+Cyan Bed,,355,9
+Purple Bed,,355,10
+Blue Bed,,355,11
+Brown Bed,,355,12
+Green Bed,,355,13
+Red Bed,,355,14
+Black Bed,,355,15
 Redstone Repeater,,356,0
 Cookie,,357,0
 Map,,358,0
@@ -551,6 +620,32 @@ Gold Horse Armor,,418,0
 Diamond Horse Armor,,419,0
 Lead,,420,0
 Name Tag,,421,0
+Black Banner,,425,0
+Red Banner,,425,1
+Green Banner,,425,2
+Brown Banner,,425,3
+Blue Banner,,425,4
+Purple Banner,,425,5
+Cyan Banner,,425,6
+Light Gray Banner,,425,7
+Gray Banner,,425,8
+Pink Banner,,425,9
+Lime Banner,,425,10
+Yellow Banner,,425,11
+Light Blue Banner,,425,12
+Magenta Banner,,425,13
+Orange Banner,,425,14
+White Banner,,425,15
+Spruce Door,,427,0
+Birch Door,,428,0
+Jungle Door,,429,0
+Acacia Door,,430,0
+Dark Oak Door,,431,0
+Spruce Boat,,444,0
+Birch Boat,,445,0
+Jungle Boat,,446,0
+Acacia Boat,,447,0
+Dark Oak Boat,,448,0
 13 Disk,,2256,0
 Cat Disk,,2257,0
 Blocks Disk,,2258,0
