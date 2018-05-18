@@ -6,4 +6,5 @@ public interface AdditionalMetadata {
 	public String serialize();
 	public boolean matches(ItemStack item);
 	public String getDisplayedInfo();
+	@Override public boolean equals(Object obj);
 }

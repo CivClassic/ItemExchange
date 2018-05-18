@@ -24,7 +24,7 @@ public class InventoryHelpers {
 		ItemStack[] contents = inventory.getContents();
 		for (int i = 0; i < contents.length && requiredAmount > 0; i++) {
 			ItemStack itemStack = contents[i];
-			if (itemStack != null && itemRule.followsRules(itemStack)) {
+			if (itemStack != null && itemRule.isRequiredItem(itemStack)) {
 				if (itemStack.getAmount() <= requiredAmount) {
 					itemStacks.add(itemStack);
 					

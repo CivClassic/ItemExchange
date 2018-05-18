@@ -10,6 +10,7 @@ import org.bukkit.command.CommandSender;
 import com.untamedears.ItemExchange.command.commands.CreateCommand;
 import com.untamedears.ItemExchange.command.commands.HelpCommand;
 import com.untamedears.ItemExchange.command.commands.SetCommand;
+import com.untamedears.ItemExchange.command.commands.RawCommand;
 
 /**
  * User: JonnyD
@@ -25,6 +26,7 @@ public class CommandHandler {
 		this.addCommand(new CreateCommand());
 		this.addCommand(new SetCommand());
 		this.addCommand(new HelpCommand());
+		this.addCommand(new RawCommand());
 	}
 
 	public void addCommand(Command command) {
@@ -70,9 +72,9 @@ public class CommandHandler {
 	}
 
 	private void displayCommandHelp(Command cmd, CommandSender sender) {
-		sender.sendMessage(new StringBuilder().append("§cCommand:§e ").append(cmd.getName()).toString());
-		sender.sendMessage(new StringBuilder().append("§cDescription:§e ").append(cmd.getDescription()).toString());
-		sender.sendMessage(new StringBuilder().append("§cUsage:§e ").append(cmd.getUsage()).toString());
+		sender.sendMessage(new StringBuilder().append("ï¿½cCommand:ï¿½e ").append(cmd.getName()).toString());
+		sender.sendMessage(new StringBuilder().append("ï¿½cDescription:ï¿½e ").append(cmd.getDescription()).toString());
+		sender.sendMessage(new StringBuilder().append("ï¿½cUsage:ï¿½e ").append(cmd.getUsage()).toString());
 	}
 
 	private Command getCmdFromIdent(String ident, CommandSender executor) {

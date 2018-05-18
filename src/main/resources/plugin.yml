@@ -12,3 +12,7 @@ commands:
     aliases: ies
     description: Sets the field of the ExchangeRule held in hand
     usage: /ieset (or /ies) <field> [value] [modifier]
+  ieraw:
+    aliases: ier
+    description: Outputs the raw data of an ExchangeRule
+    usage: /ieraw (or /ier)
