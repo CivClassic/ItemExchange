@@ -1,96 +1,156 @@
 enabled: true
 debug: false
 
+# The section symbol that's used for ItemExchange encoding, default: §
+sectionSymbol: "�"
+
+# The blocks that are valid shop blocks for ItemExchange.
+# Setting the button to true allows that material to trigger the successful exchange button, default: false
+# The block must have a natively retrievable inventory.
+validShopBlocks:
+  - ==: com.untamedears.ItemExchange.structs.ValidShopBlock
+    material: "CHEST"
+    durability: 0
+    button: true
+  - ==: com.untamedears.ItemExchange.structs.ValidShopBlock
+    material: "TRAPPED_CHEST"
+    durability: 0
+    button: true
+  - ==: com.untamedears.ItemExchange.structs.ValidShopBlock
+    material: "DISPENSER"
+    durability: 0
+    button: false
+  - ==: com.untamedears.ItemExchange.structs.ValidShopBlock
+    material: "DROPPER"
+    durability: 0
+    button: false
+
+# The item of which the exchange data will be encoded onto.
+ruleItem:
+  ==: com.untamedears.ItemExchange.structs.MaterialAndDurability
+  material: "STONE_BUTTON"
+  durability: 0
+
 # Enchantment Names and Abbreviations
 # Abbreviations must keep to alphabetical characters!
 enchantDetails:
-  - enchant: "PROTECTION_ENVIRONMENTAL"
+  - ==: com.untamedears.ItemExchange.structs.EnchantmentDetails
+    enchant: "PROTECTION_ENVIRONMENTAL"
     name: "Protection"
     abbr: "P"
-  - enchant: "PROTECTION_FIRE"
+  - ==: com.untamedears.ItemExchange.structs.EnchantmentDetails
+    enchant: "PROTECTION_FIRE"
     name: "Fire Protection"
     abbr: "FP"
-  - enchant: "PROTECTION_FALL"
+  - ==: com.untamedears.ItemExchange.structs.EnchantmentDetails
+    enchant: "PROTECTION_FALL"
     name: "Feather Falling"
     abbr: "FF"
-  - enchant: "PROTECTION_EXPLOSIONS"
+  - ==: com.untamedears.ItemExchange.structs.EnchantmentDetails
+    enchant: "PROTECTION_EXPLOSIONS"
     name: "Blast Protection"
     abbr: "BP"
-  - enchant: "PROTECTION_PROJECTILE"
+  - ==: com.untamedears.ItemExchange.structs.EnchantmentDetails
+    enchant: "PROTECTION_PROJECTILE"
     name: "Projectile Protection"
     abbr: "PP"
-  - enchant: "OXYGEN"
+  - ==: com.untamedears.ItemExchange.structs.EnchantmentDetails
+    enchant: "OXYGEN"
     name: "Respiration"
     abbr: "R"
-  - enchant: "WATER_WORKER"
+  - ==: com.untamedears.ItemExchange.structs.EnchantmentDetails
+    enchant: "WATER_WORKER"
     name: "Aqua Affinity"
     abbr: "AA"
-  - enchant: "THORNS"
+  - ==: com.untamedears.ItemExchange.structs.EnchantmentDetails
+    enchant: "THORNS"
     name: "Thorns"
     abbr: "T"
-  - enchant: "DEPTH_STRIDER"
+  - ==: com.untamedears.ItemExchange.structs.EnchantmentDetails
+    enchant: "DEPTH_STRIDER"
     name: "Depth Strider"
     abbr: "DS"
-  - enchant: "FROST_WALKER"
+  - ==: com.untamedears.ItemExchange.structs.EnchantmentDetails
+    enchant: "FROST_WALKER"
     name: "Frost Walker"
     abbr: "FW"
-  - enchant: "BINDING_CURSE"
+  - ==: com.untamedears.ItemExchange.structs.EnchantmentDetails
+    enchant: "BINDING_CURSE"
     name: "Curse of Binding"
     abbr: "CoB"
-  - enchant: "DAMAGE_ALL"
+  - ==: com.untamedears.ItemExchange.structs.EnchantmentDetails
+    enchant: "DAMAGE_ALL"
     name: "Sharpness"
     abbr: "S"
-  - enchant: "DAMAGE_UNDEAD"
+  - ==: com.untamedears.ItemExchange.structs.EnchantmentDetails
+    enchant: "DAMAGE_UNDEAD"
     name: "Smite"
     abbr: "Sm"
-  - enchant: "DAMAGE_ARTHROPODS"
+  - ==: com.untamedears.ItemExchange.structs.EnchantmentDetails
+    enchant: "DAMAGE_ARTHROPODS"
     name: "Bane of Athropods"
     abbr: "BoA"
-  - enchant: "KNOCKBACK"
+  - ==: com.untamedears.ItemExchange.structs.EnchantmentDetails
+    enchant: "KNOCKBACK"
     name: "Knockback"
     abbr: "K"
-  - enchant: "FIRE_ASPECT"
+  - ==: com.untamedears.ItemExchange.structs.EnchantmentDetails
+    enchant: "FIRE_ASPECT"
     name: "Fire Aspect"
     abbr: "FA"
-  - enchant: "LOOT_BONUS_MOBS"
+  - ==: com.untamedears.ItemExchange.structs.EnchantmentDetails
+    enchant: "LOOT_BONUS_MOBS"
     name: "Looting"
     abbr: "L"
-  - enchant: "SWEEPING_EDGE"
+  - ==: com.untamedears.ItemExchange.structs.EnchantmentDetails
+    enchant: "SWEEPING_EDGE"
     name: "Sweeping Edge"
     abbr: "SE"
-  - enchant: "DIG_SPEED"
+  - ==: com.untamedears.ItemExchange.structs.EnchantmentDetails
+    enchant: "DIG_SPEED"
     name: "Efficiency"
     abbr: "E"
-  - enchant: "SILK_TOUCH"
+  - ==: com.untamedears.ItemExchange.structs.EnchantmentDetails
+    enchant: "SILK_TOUCH"
     name: "Silk Touch"
     abbr: "ST"
-  - enchant: "DURABILITY"
+  - ==: com.untamedears.ItemExchange.structs.EnchantmentDetails
+    enchant: "DURABILITY"
     name: "Unbreaking"
     abbr: "U"
-  - enchant: "LOOT_BONUS_BLOCKS"
+  - ==: com.untamedears.ItemExchange.structs.EnchantmentDetails
+    enchant: "LOOT_BONUS_BLOCKS"
     name: "Fortune"
     abbr: "F"
-  - enchant: "ARROW_DAMAGE"
+  - ==: com.untamedears.ItemExchange.structs.EnchantmentDetails
+    enchant: "ARROW_DAMAGE"
     name: "Power"
     abbr: "Po"
-  - enchant: "ARROW_KNOCKBACK"
+  - ==: com.untamedears.ItemExchange.structs.EnchantmentDetails
+    enchant: "ARROW_KNOCKBACK"
     name: "Punch"
     abbr: "Pu"
-  - enchant: "ARROW_FIRE"
+  - ==: com.untamedears.ItemExchange.structs.EnchantmentDetails
+    enchant: "ARROW_FIRE"
     name: "Flame"
     abbr: "Fl"
-  - enchant: "ARROW_INFINITE"
+  - ==: com.untamedears.ItemExchange.structs.EnchantmentDetails
+    enchant: "ARROW_INFINITE"
     name: "Infinite"
     abbr: "I"
-  - enchant: "LUCK"
+  - ==: com.untamedears.ItemExchange.structs.EnchantmentDetails
+    enchant: "LUCK"
     name: "Luck of the Sea"
     abbr: "LS"
-  - enchant: "LURE"
+  - ==: com.untamedears.ItemExchange.structs.EnchantmentDetails
+    enchant: "LURE"
     name: "Lure"
     abbr: "Lu"
-  - enchant: "MENDING"
+  - ==: com.untamedears.ItemExchange.structs.EnchantmentDetails
+    enchant: "MENDING"
     name: "Mending"
     abbr: "M"
-  - enchant: "VANISHING_CURSE"
+  - ==: com.untamedears.ItemExchange.structs.EnchantmentDetails
+    enchant: "VANISHING_CURSE"
     name: "Curse of Vanishing"
     abbr: "CoV"
