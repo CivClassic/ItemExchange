@@ -769,6 +769,58 @@ public class ExchangeRule {
 		return ruleType;
 	}
 
+    public Material getMaterial() {
+        return material;
+    }
+
+    public short getDurability() {
+        return durability;
+    }
+
+    public Map<Enchantment, Integer> getRequiredEnchantments() {
+        return requiredEnchantments;
+    }
+
+    public void setRequiredEnchantments(Map<Enchantment, Integer> requiredEnchantments) {
+        this.requiredEnchantments = requiredEnchantments;
+    }
+
+    public List<Enchantment> getExcludedEnchantments() {
+        return excludedEnchantments;
+    }
+
+    public void setExcludedEnchantments(List<Enchantment> excludedEnchantments) {
+        this.excludedEnchantments = excludedEnchantments;
+    }
+
+    public boolean isUnlistedEnchantmentsAllowed() {
+        return unlistedEnchantmentsAllowed;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public String[] getLore() {
+        return lore;
+    }
+
+    public RuleType getRuleType() {
+        return ruleType;
+    }
+
+    public void setRuleType(RuleType ruleType) {
+        this.ruleType = ruleType;
+    }
+
+    public AdditionalMetadata getAdditional() {
+        return additional;
+    }
+
+    public void setAdditional(AdditionalMetadata additional) {
+        this.additional = additional;
+    }
+
 	public static boolean isRuleBlock(ItemStack item) {
 		try {
 			ExchangeRule.parseBulkRuleBlock(item);
