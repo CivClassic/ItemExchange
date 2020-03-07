@@ -1,4 +1,4 @@
-package com.untamedears.ItemExchange.commands;
+package com.untamedears.itemexchange.commands;
 
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.InvalidCommandArgument;
@@ -9,8 +9,8 @@ import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Split;
 import co.aikar.commands.annotation.Syntax;
 import com.google.common.base.Strings;
-import com.untamedears.ItemExchange.utility.ExchangeRule;
-import com.untamedears.ItemExchange.utility.ExchangeRule.RuleType;
+import com.untamedears.itemexchange.utility.ExchangeRule;
+import com.untamedears.itemexchange.utility.ExchangeRule.RuleType;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;

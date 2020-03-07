@@ -1,9 +1,9 @@
-package com.untamedears.ItemExchange.utility;
+package com.untamedears.itemexchange.utility;
 
 import java.util.Map;
 import java.util.TreeMap;
 import com.google.common.base.Strings;
-import com.untamedears.ItemExchange.ItemExchangePlugin;
+import com.untamedears.itemexchange.ItemExchangePlugin;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 import vg.civcraft.mc.civmodcore.api.ItemAPI;

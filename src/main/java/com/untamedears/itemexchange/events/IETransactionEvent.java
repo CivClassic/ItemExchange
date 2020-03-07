@@ -1,4 +1,4 @@
-package com.untamedears.ItemExchange.events;
+package com.untamedears.itemexchange.events;
 
 import org.bukkit.Location;
 import org.bukkit.entity.Player;

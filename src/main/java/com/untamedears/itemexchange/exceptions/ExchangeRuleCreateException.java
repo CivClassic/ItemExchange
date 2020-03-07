@@ -1,4 +1,4 @@
-package com.untamedears.ItemExchange.exceptions;
+package com.untamedears.itemexchange.exceptions;
 
 public class ExchangeRuleCreateException extends Exception {
 	private static final long serialVersionUID = 8042630127563419937L;

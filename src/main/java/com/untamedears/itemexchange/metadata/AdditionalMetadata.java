@@ -1,4 +1,4 @@
-package com.untamedears.ItemExchange.metadata;
+package com.untamedears.itemexchange.metadata;
 
 import org.bukkit.inventory.ItemStack;
 

@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.untamedears.ItemExchange.utility;
+package com.untamedears.itemexchange.utility;
 
 import java.util.ArrayList;
 import java.util.List;

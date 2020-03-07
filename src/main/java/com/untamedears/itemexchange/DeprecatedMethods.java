@@ -1,4 +1,4 @@
-package com.untamedears.ItemExchange;
+package com.untamedears.itemexchange;
 
 import org.bukkit.Material;
 import org.bukkit.block.Block;

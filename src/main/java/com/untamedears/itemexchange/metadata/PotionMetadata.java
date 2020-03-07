@@ -1,4 +1,4 @@
-package com.untamedears.ItemExchange.metadata;
+package com.untamedears.itemexchange.metadata;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.logging.Level;
 
-import com.untamedears.ItemExchange.ItemExchangePlugin;
+import com.untamedears.itemexchange.ItemExchangePlugin;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.inventory.ItemStack;
@@ -16,7 +16,7 @@ import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
-import com.untamedears.ItemExchange.utility.ExchangeRule;
+import com.untamedears.itemexchange.utility.ExchangeRule;
 import org.bukkit.potion.PotionType;
 
 public class PotionMetadata implements AdditionalMetadata {

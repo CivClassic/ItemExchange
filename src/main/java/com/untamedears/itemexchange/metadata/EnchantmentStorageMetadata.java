@@ -1,4 +1,4 @@
-package com.untamedears.ItemExchange.metadata;
+package com.untamedears.itemexchange.metadata;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -6,16 +6,16 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Strings;
-import com.untamedears.ItemExchange.utility.Utilities;
+import com.untamedears.itemexchange.utility.Utilities;
 import org.bukkit.ChatColor;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import com.untamedears.ItemExchange.DeprecatedMethods;
-import com.untamedears.ItemExchange.ItemExchangePlugin;
-import com.untamedears.ItemExchange.utility.ExchangeRule;
+import com.untamedears.itemexchange.DeprecatedMethods;
+import com.untamedears.itemexchange.ItemExchangePlugin;
+import com.untamedears.itemexchange.utility.ExchangeRule;
 import vg.civcraft.mc.civmodcore.itemHandling.NiceNames;
 
 public class EnchantmentStorageMetadata implements AdditionalMetadata {

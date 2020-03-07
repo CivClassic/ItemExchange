@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.untamedears.ItemExchange.utility;
+package com.untamedears.itemexchange.utility;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,10 +21,10 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
-import com.untamedears.ItemExchange.ItemExchangePlugin;
-import com.untamedears.ItemExchange.events.IETransactionEvent;
-import com.untamedears.ItemExchange.exceptions.ExchangeRuleCreateException;
-import com.untamedears.ItemExchange.exceptions.ExchangeRuleParseException;
+import com.untamedears.itemexchange.ItemExchangePlugin;
+import com.untamedears.itemexchange.events.IETransactionEvent;
+import com.untamedears.itemexchange.exceptions.ExchangeRuleCreateException;
+import com.untamedears.itemexchange.exceptions.ExchangeRuleParseException;
 
 /**
  *

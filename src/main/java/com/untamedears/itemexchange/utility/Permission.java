@@ -1,4 +1,4 @@
-package com.untamedears.ItemExchange.utility;
+package com.untamedears.itemexchange.utility;
 
 import com.google.common.base.Strings;
 import org.bukkit.entity.Player;

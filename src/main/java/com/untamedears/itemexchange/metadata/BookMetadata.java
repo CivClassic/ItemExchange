@@ -1,4 +1,4 @@
-package com.untamedears.ItemExchange.metadata;
+package com.untamedears.itemexchange.metadata;
 
 import java.util.List;
 
@@ -7,7 +7,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import com.untamedears.ItemExchange.utility.ExchangeRule;
+import com.untamedears.itemexchange.utility.ExchangeRule;
 
 public class BookMetadata implements AdditionalMetadata {
 	private String title;

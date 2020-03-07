@@ -1,4 +1,4 @@
-package com.untamedears.ItemExchange.commands;
+package com.untamedears.itemexchange.commands;
 
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.InvalidCommandArgument;
@@ -11,10 +11,10 @@ import co.aikar.commands.annotation.Split;
 import co.aikar.commands.annotation.Subcommand;
 import co.aikar.commands.annotation.Syntax;
 import com.google.common.base.Strings;
-import com.untamedears.ItemExchange.ItemExchangePlugin;
-import com.untamedears.ItemExchange.utility.Utilities;
-import com.untamedears.ItemExchange.exceptions.ExchangeRuleParseException;
-import com.untamedears.ItemExchange.utility.ExchangeRule;
+import com.untamedears.itemexchange.ItemExchangePlugin;
+import com.untamedears.itemexchange.utility.Utilities;
+import com.untamedears.itemexchange.exceptions.ExchangeRuleParseException;
+import com.untamedears.itemexchange.utility.ExchangeRule;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.bukkit.Bukkit;

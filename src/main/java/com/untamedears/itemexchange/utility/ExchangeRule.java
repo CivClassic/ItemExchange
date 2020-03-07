@@ -1,4 +1,4 @@
-package com.untamedears.ItemExchange.utility;
+package com.untamedears.itemexchange.utility;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,14 +33,14 @@ import vg.civcraft.mc.civmodcore.itemHandling.NiceNames;
 import vg.civcraft.mc.namelayer.GroupManager;
 import vg.civcraft.mc.namelayer.group.Group;
 
-import com.untamedears.ItemExchange.DeprecatedMethods;
-import com.untamedears.ItemExchange.ItemExchangePlugin;
-import com.untamedears.ItemExchange.exceptions.ExchangeRuleCreateException;
-import com.untamedears.ItemExchange.exceptions.ExchangeRuleParseException;
-import com.untamedears.ItemExchange.metadata.AdditionalMetadata;
-import com.untamedears.ItemExchange.metadata.BookMetadata;
-import com.untamedears.ItemExchange.metadata.EnchantmentStorageMetadata;
-import com.untamedears.ItemExchange.metadata.PotionMetadata;
+import com.untamedears.itemexchange.DeprecatedMethods;
+import com.untamedears.itemexchange.ItemExchangePlugin;
+import com.untamedears.itemexchange.exceptions.ExchangeRuleCreateException;
+import com.untamedears.itemexchange.exceptions.ExchangeRuleParseException;
+import com.untamedears.itemexchange.metadata.AdditionalMetadata;
+import com.untamedears.itemexchange.metadata.BookMetadata;
+import com.untamedears.itemexchange.metadata.EnchantmentStorageMetadata;
+import com.untamedears.itemexchange.metadata.PotionMetadata;
 
 /*
  * Contains the rules pertaining to an item which can participate in the exchange

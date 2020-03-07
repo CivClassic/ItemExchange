@@ -1,10 +1,10 @@
-package com.untamedears.ItemExchange.utility;
+package com.untamedears.itemexchange.utility;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 
-import com.untamedears.ItemExchange.DeprecatedMethods;
-import com.untamedears.ItemExchange.ItemExchangePlugin;
+import com.untamedears.itemexchange.DeprecatedMethods;
+import com.untamedears.itemexchange.ItemExchangePlugin;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
@@ -97,4 +97,5 @@ public class BlockUtility {
 		else
 			return dc_l_location.getBlock();
 	}
+
 }

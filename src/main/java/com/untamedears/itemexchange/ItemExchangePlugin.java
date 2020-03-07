@@ -1,10 +1,10 @@
-package com.untamedears.ItemExchange;
+package com.untamedears.itemexchange;
 
 import co.aikar.commands.BukkitCommandManager;
 import com.google.common.base.Strings;
-import com.untamedears.ItemExchange.commands.SetCommand;
-import com.untamedears.ItemExchange.listeners.ItemExchangeListener;
-import com.untamedears.ItemExchange.utility.Permission;
+import com.untamedears.itemexchange.commands.SetCommand;
+import com.untamedears.itemexchange.listeners.ItemExchangeListener;
+import com.untamedears.itemexchange.utility.Permission;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;

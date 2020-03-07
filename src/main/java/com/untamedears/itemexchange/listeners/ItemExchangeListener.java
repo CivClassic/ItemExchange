@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.untamedears.ItemExchange.listeners;
+package com.untamedears.itemexchange.listeners;
 
 import static org.bukkit.event.block.Action.LEFT_CLICK_BLOCK;
 
@@ -26,10 +26,10 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 
-import com.untamedears.ItemExchange.ItemExchangePlugin;
-import com.untamedears.ItemExchange.exceptions.ExchangeRuleParseException;
-import com.untamedears.ItemExchange.utility.ExchangeRule;
-import com.untamedears.ItemExchange.utility.ItemExchange;
+import com.untamedears.itemexchange.ItemExchangePlugin;
+import com.untamedears.itemexchange.exceptions.ExchangeRuleParseException;
+import com.untamedears.itemexchange.utility.ExchangeRule;
+import com.untamedears.itemexchange.utility.ItemExchange;
 
 /**
  * 
