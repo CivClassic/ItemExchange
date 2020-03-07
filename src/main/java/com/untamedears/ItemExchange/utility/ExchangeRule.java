@@ -12,6 +12,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.UUID;
 
+import com.google.common.base.Strings;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
@@ -28,6 +29,7 @@ import org.bukkit.inventory.meta.MapMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 
+import vg.civcraft.mc.civmodcore.itemHandling.NiceNames;
 import vg.civcraft.mc.namelayer.GroupManager;
 import vg.civcraft.mc.namelayer.group.Group;
 
@@ -51,10 +53,10 @@ import com.untamedears.ItemExchange.metadata.PotionMetadata;
 public class ExchangeRule {
 	private static final List<Material> NOT_SUPPORTED = Arrays.asList(Material.MAP, Material.WRITTEN_BOOK, Material.ENCHANTED_BOOK, Material.FIREWORK, Material.FIREWORK_CHARGE);
 	
-	public static final String hiddenRuleSpacer = "§&§&§&§&§r";
-	public static final String hiddenCategorySpacer = "§&§&§&§r";
-	public static final String hiddenSecondarySpacer = "§&§&§r";
-	public static final String hiddenTertiarySpacer = "§&§r";
+	public static final String hiddenRuleSpacer = "ï¿½&ï¿½&ï¿½&ï¿½&ï¿½r";
+	public static final String hiddenCategorySpacer = "ï¿½&ï¿½&ï¿½&ï¿½r";
+	public static final String hiddenSecondarySpacer = "ï¿½&ï¿½&ï¿½r";
+	public static final String hiddenTertiarySpacer = "ï¿½&ï¿½r";
 	
 	public static final String ruleSpacer = "&&&&r";
 	public static final String categorySpacer = "&&&r";
@@ -309,12 +311,12 @@ public class ExchangeRule {
 	}
 
 	/*
-	 * Adds a § in front of every character in a string
+	 * Adds a ï¿½ in front of every character in a string
 	 */
 	private static String hideString(String string) {
 		String hiddenString = "";
 		for (char character : string.toCharArray()) {
-			hiddenString += "§" + character;
+			hiddenString += "ï¿½" + character;
 		}
 		return hiddenString;
 	}
@@ -333,69 +335,10 @@ public class ExchangeRule {
 		return string.replaceAll("\\\\([\\\\r])", "$1");
 	}
 
-	/*
-	 * Parse create command into an exchange rule
-	 */
-	public static ExchangeRule parseCreateCommand(String[] args) throws ExchangeRuleParseException {
-		try {
-			// Parse ruletype
-			RuleType ruleType = null;
-			switch (args[0].toLowerCase()) {
-				case "i":
-				case "in":
-				case "input":
-					ruleType = ExchangeRule.RuleType.INPUT;
-					break;
-				case "o":
-				case "out":
-				case "output":
-					ruleType = ExchangeRule.RuleType.OUTPUT;
-					break;
-			}
-			if (ruleType != null) {
-				Material material = null;
-				short durability = 0;
-				int amount = 1;
-				if (args.length >= 2) {
-					if (ItemExchangePlugin.NAME_MATERIAL.containsKey(args[1].toLowerCase())) {
-						ItemStack itemStack = ItemExchangePlugin.NAME_MATERIAL.get(args[1].toLowerCase());
-						material = itemStack.getType();
-						durability = itemStack.getDurability();
-					}
-					else {
-						String[] split = args[1].split(":");
-						material = DeprecatedMethods.getMaterialById(Integer.valueOf(split[0]));
-						if (split.length > 1) {
-							durability = Short.valueOf(split[1]);
-						}
-					}
-					if (args.length == 3) {
-						amount = Integer.valueOf(args[2]);
-						if (amount <= 0) {
-							amount = 1;
-						}
-					}
-				}
-				
-				if(NOT_SUPPORTED.contains(material)) {
-					throw new ExchangeRuleParseException("This material is not supported.");
-				}
-				
-				return new ExchangeRule(material, amount, durability, ruleType);
-			}
-			else {
-				throw new ExchangeRuleParseException("Please specify an input or output.");
-			}
-		}
-		catch (Exception e) {
-			throw new ExchangeRuleParseException("Invalid exchange rule.");
-		}
-	}
-
 	public static ItemStack toBulkItemStack(Collection<ExchangeRule> rules) {
 		ItemStack itemStack = ItemExchangePlugin.ITEM_RULE_ITEMSTACK.clone();
 
-		String ruleSpacer = "§&§&§&§&§r";
+		String ruleSpacer = "ï¿½&ï¿½&ï¿½&ï¿½&ï¿½r";
 
 		ItemMeta itemMeta = itemStack.getItemMeta();
 		itemMeta.setDisplayName(ChatColor.DARK_RED + "Bulk Rule Block");
@@ -500,7 +443,7 @@ public class ExchangeRule {
 		if(citadelGroup != null) {
 			compiledRule += hideString(escapeString(citadelGroup.getName()));
 		}
-		compiledRule += hiddenCategorySpacer + "§r";
+		compiledRule += hiddenCategorySpacer + "ï¿½r";
 		return compiledRule;
 	}
 
@@ -659,15 +602,16 @@ public class ExchangeRule {
 	}
 
 	private String displayedItemStackInfo() {
-		StringBuilder stringBuilder = new StringBuilder().append(ChatColor.YELLOW).append((ruleType == RuleType.INPUT ? "Input" : "Output") + ": " + ChatColor.WHITE).append(amount);
-		if (ItemExchangePlugin.MATERIAL_NAME.containsKey(new ItemStack(material, 1, durability))) {
-			stringBuilder.append(" " + ItemExchangePlugin.MATERIAL_NAME.get(new ItemStack(material, 1, durability)));
-		}
-		else {
-			stringBuilder.append(material.name() + ":").append(durability);
-		}
-		stringBuilder.append(displayName.equals("") ? "" : " \"" + displayName + ChatColor.WHITE + "\"");
-		return stringBuilder.toString();
+	    return "" +
+                ChatColor.RESET +
+                ChatColor.YELLOW +
+                (ruleType == RuleType.INPUT ? "Input" : "Output") +
+                ": " +
+                ChatColor.WHITE +
+                amount +
+                " " +
+                Utilities.getItemName(new ItemStack(material, 1, durability)) +
+                (Strings.isNullOrEmpty(displayName) ? "" : "\"" + displayName + "\"");
 	}
 
 	private String displayedEnchantments() {
@@ -675,13 +619,13 @@ public class ExchangeRule {
 			StringBuilder stringBuilder = new StringBuilder();
 			for (Entry<Enchantment, Integer> entry : requiredEnchantments.entrySet()) {
 				stringBuilder.append(ChatColor.GREEN);
-				stringBuilder.append(ItemExchangePlugin.ENCHANTMENT_ABBRV.get(entry.getKey().getName()));
+				stringBuilder.append(NiceNames.getName(entry.getKey()));
 				stringBuilder.append(entry.getValue());
 				stringBuilder.append(" ");
 			}
 			for (Enchantment enchantment : excludedEnchantments) {
 				stringBuilder.append(ChatColor.RED);
-				stringBuilder.append(ItemExchangePlugin.ENCHANTMENT_ABBRV.get(enchantment.getName()));
+				stringBuilder.append(NiceNames.getAcronym(enchantment));
 				stringBuilder.append(" ");
 			}
 			stringBuilder.append(unlistedEnchantmentsAllowed ? ChatColor.GREEN + "Other Enchantments Allowed." : ChatColor.RED + "Other Enchantments Disallowed");

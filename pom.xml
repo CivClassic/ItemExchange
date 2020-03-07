@@ -9,13 +9,13 @@
     <packaging>jar</packaging>
     <version>1.4.0</version>
 
-    <name>ItemExchange</name>
     <url>https://github.com/CivClassic/ItemExchange</url>
 
     <properties>
         <encoding>UTF-8</encoding>
         <javaVersion>1.8</javaVersion>
         <mcVersion>1.12.2</mcVersion>
+        <mainClass>${project.groupId}.${project.artifactId}Plugin</mainClass>
     </properties>
 
     <build>
@@ -80,8 +80,13 @@
         <dependency>
             <groupId>vg.civcraft.mc.civmodcore</groupId>
             <artifactId>CivModCore</artifactId>
-            <version>1.6.2</version>
+            <version>1.6.4</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>co.aikar</groupId>
+            <artifactId>acf-bukkit</artifactId>
+            <version>0.5.0-SNAPSHOT</version>
         </dependency>
         <!-- Soft Dependencies -->
         <dependency>
@@ -107,6 +112,10 @@
             <id>devoted-repo</id>
             <url>https://build.devotedmc.com/plugin/repository/everything/</url>
         </repository>
+        <repository>
+            <id>aikar</id>
+            <url>https://repo.aikar.co/content/groups/aikar/</url>
+        </repository>
     </repositories>
-    
+
 </project>

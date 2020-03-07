@@ -3,7 +3,10 @@ package com.untamedears.ItemExchange.metadata;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.stream.Collectors;
 
+import com.google.common.base.Strings;
+import com.untamedears.ItemExchange.utility.Utilities;
 import org.bukkit.ChatColor;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
@@ -13,8 +16,10 @@ import org.bukkit.inventory.meta.ItemMeta;
 import com.untamedears.ItemExchange.DeprecatedMethods;
 import com.untamedears.ItemExchange.ItemExchangePlugin;
 import com.untamedears.ItemExchange.utility.ExchangeRule;
+import vg.civcraft.mc.civmodcore.itemHandling.NiceNames;
 
 public class EnchantmentStorageMetadata implements AdditionalMetadata {
+
 	private static final String[] numerals = {"I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"};
 	
 	private Map<Enchantment, Integer> enchantments;
@@ -63,36 +68,19 @@ public class EnchantmentStorageMetadata implements AdditionalMetadata {
 
 	@Override
 	public String getDisplayedInfo() {
-		StringBuilder info = new StringBuilder();
-		
-		info.append(ChatColor.DARK_AQUA).append("Stored enchantments: ");
-		
-		if(enchantments.size() > 0) {
-			Iterator<Enchantment> iterator = enchantments.keySet().iterator();
-			
-			while(iterator.hasNext()) {
-				Enchantment enchantment = iterator.next();
-				
-				String name = ItemExchangePlugin.ENCHANTMENT_NAME.containsKey(enchantment.getName()) ? ItemExchangePlugin.ENCHANTMENT_NAME.get(enchantment.getName()) : enchantment.getName();
-				
-				info.append(name).append(" ");
-				
-				int level = enchantments.get(enchantment);
-				
-				if(level - 1 < numerals.length)
-					info.append(numerals[level - 1]);
-				else
-					info.append(level);
-				
-				if(iterator.hasNext())
-					info.append('\n');
-			}
-		}
-		else {
-			info.append(ChatColor.AQUA).append("<none>");
-		}
-		
-		return info.toString();
+	    return ChatColor.DARK_AQUA +
+                "Stored enchantments: " +
+                enchantments.
+                        entrySet().
+                        stream().
+                        map((entry) -> {
+                            String name = NiceNames.getName(entry.getKey());
+                            if (Strings.isNullOrEmpty(name)) {
+                                name = entry.getKey().getName();
+                            }
+                            return ChatColor.AQUA + name + Utilities.generateRomanNumerals(entry.getValue());
+                        }).
+                        collect(Collectors.joining("\n"));
 	}
 	
 	public static EnchantmentStorageMetadata deserialize(String s) {

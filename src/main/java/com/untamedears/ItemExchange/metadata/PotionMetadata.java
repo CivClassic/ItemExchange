@@ -7,6 +7,7 @@ import java.util.Objects;
 import java.util.logging.Level;
 
 import com.untamedears.ItemExchange.ItemExchangePlugin;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -196,7 +197,7 @@ public class PotionMetadata implements AdditionalMetadata {
 				}
 				catch (Exception error) {
 					metadata.base = new PotionData(PotionType.WATER, false, false);
-					ItemExchangePlugin.instance.getLogger().log(Level.WARNING, "An error occurred parsing ItemExchange potion metadata: base effect. Defaulting to a water bottle.", error);
+                    Bukkit.getLogger().log(Level.WARNING, "An error occurred parsing ItemExchange potion metadata: base effect. Defaulting to a water bottle.", error);
 				}
 			}
 			// Parse any other effect
@@ -211,7 +212,7 @@ public class PotionMetadata implements AdditionalMetadata {
 					metadata.effects.add(new PotionEffect(type, duration, amplifier, ambient));
 				}
 				catch (Exception error) {
-					ItemExchangePlugin.instance.getLogger().log(Level.WARNING, "An error occurred parsing ItemExchange potion metadata: custom effect. Skipping.", error);
+					Bukkit.getLogger().log(Level.WARNING, "An error occurred parsing ItemExchange potion metadata: custom effect. Skipping.", error);
 				}
 			}
 		}

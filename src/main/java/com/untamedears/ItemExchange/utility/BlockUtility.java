@@ -73,14 +73,12 @@ public class BlockUtility {
 		DeprecatedMethods.setBlockMeta(b_onstate, (byte)(b_onmeta | 0x8));
 		b_onstate.update();
 		// And set the block to unpower in due time
-		Bukkit.getScheduler().scheduleSyncDelayedTask(ItemExchangePlugin.instance, new Runnable() {
-			public void run() {
-				BlockState b_offstate = block.getState();
-				byte b_offmeta = DeprecatedMethods.getBlockMeta(block);
-				DeprecatedMethods.setBlockMeta(b_offstate, (byte)(b_offmeta & ~0x8));
-				b_offstate.update();
-			}
-		}, time);
+		Bukkit.getScheduler().scheduleSyncDelayedTask(ItemExchangePlugin.getInstance(), () -> {
+            BlockState b_offstate = block.getState();
+            byte b_offmeta = DeprecatedMethods.getBlockMeta(block);
+            DeprecatedMethods.setBlockMeta(b_offstate, (byte)(b_offmeta & ~0x8));
+            b_offstate.update();
+        }, time);
 	}
 
 	public static Block getOtherDoubleChestBlock(final Block chest) {

@@ -1,33 +1,39 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package com.untamedears.ItemExchange;
 
+import co.aikar.commands.BukkitCommandManager;
+import com.google.common.base.Strings;
+import com.untamedears.ItemExchange.commands.SetCommand;
 import com.untamedears.ItemExchange.listeners.ItemExchangeListener;
-import com.untamedears.ItemExchange.command.CommandHandler;
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
+import com.untamedears.ItemExchange.utility.Permission;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.bukkit.Bukkit;
+import java.util.stream.Collectors;
 import org.bukkit.Material;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandSender;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.java.JavaPlugin;
+import vg.civcraft.mc.civmodcore.ACivMod;
+import vg.civcraft.mc.civmodcore.api.MaterialAPI;
+import vg.civcraft.mc.civmodcore.itemHandling.NiceNames;
 
-/**
- * 
- * @author Brian Landry
- */
-public class ItemExchangePlugin extends JavaPlugin {
-	public static ItemExchangePlugin instance;
-	
-	private static final CommandHandler commandHandler = new CommandHandler();
+public class ItemExchangePlugin extends ACivMod {
+
+    public static final Permission PURCHASE_PERMISSION = new Permission(
+            "ITEM_EXCHANGE_GROUP_VIEW_PURCHASE", Permission.membersAndAbove(),
+            "The ability to view and purchase exchanges set to this group.");
+
+    public static final Permission ESTABLISH_PERMISSION = new Permission(
+            "ITEM_EXCHANGE_GROUP_ESTABLISH", Permission.modsAndAbove(),
+            "The ability to set exchanges to be exclusive to this group.");
+
+    public static final Map<Enchantment, String> ENCHANT_ABBREVS = new HashMap<>();
+
+    private static BukkitCommandManager commands;
+
+    private static ItemExchangePlugin instance;
+
 	// Blocks that can be used as exchanges, any block with an inventory
 	// *should* works
 	public static final List<Material> ACCEPTABLE_BLOCKS = Arrays.asList(Material.CHEST, Material.DISPENSER, Material.TRAPPED_CHEST, Material.DROPPER);
@@ -41,91 +47,55 @@ public class ItemExchangePlugin extends JavaPlugin {
 			Material.DIAMOND_SPADE, Material.GOLD_SPADE, Material.STONE_SPADE, Material.WOOD_SPADE, 
 			Material.DIAMOND_HOE, Material.GOLD_HOE, Material.STONE_HOE, Material.WOOD_HOE, 
 			Material.BOW, Material.SHEARS, Material.FISHING_ROD, Material.FLINT_AND_STEEL, Material.CARROT_STICK);
-	public static final boolean CITADEL_ENABLED = false;
-	// Maps that provide a 1:1 relationship between commonly used/displayed item
-	// and enchantment names
-	// and their bukkit counterparts. The itemstack mapping may be incomplete,
-	// however the enchantment
-	// mapping needs to be complete
-	public static final Map<ItemStack, String> MATERIAL_NAME = new HashMap<ItemStack, String>();
-	public static final Map<String, ItemStack> NAME_MATERIAL = new HashMap<String, ItemStack>();
-	public static final Map<String, String> ENCHANTMENT_ABBRV = new HashMap<String, String>();
-	public static final Map<String, String> ABBRV_ENCHANTMENT = new HashMap<String, String>();
-	public static final Map<String, String> ENCHANTMENT_NAME = new HashMap<String, String>();
-	// Specifics of appeareance of ItemExchange Rules
+
 	public static final ItemStack ITEM_RULE_ITEMSTACK = new ItemStack(Material.STONE_BUTTON, 1);
 	public static final Material ITEM_RULE_MATERIAL = ITEM_RULE_ITEMSTACK.getType();
 
-	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-		return commandHandler.dispatch(sender, label, args);
-	}
-
+	@Override
 	public void onEnable() {
-		instance = this;
-		
-		// load the config.yml
-		initConfig();
-		// Import CSVs
-		importCSVs();
-		// register the events(this should be moved...)
-		registerEvents();
-		commandHandler.registerCommands();
+	    instance = this;
+	    super.onEnable();
+        saveDefaultConfig();
+		// Register Permissions
+        PURCHASE_PERMISSION.register();
+        ESTABLISH_PERMISSION.register();
+        // Register Events
+        registerEvents(new ItemExchangeListener());
+        // Load Enchantment Abbreviations
+        for (Enchantment enchantment : Enchantment.values()) {
+            String abbrev = NiceNames.getAcronym(enchantment);
+            if (!Strings.isNullOrEmpty(abbrev)) {
+                ENCHANT_ABBREVS.put(enchantment, abbrev);
+            }
+        }
+        // Load Commands
+        commands = new BukkitCommandManager(this);
+        commands.getCommandCompletions().registerAsyncCompletion(
+                "materials", (context) -> {
+                    String input = context.getInput();
+                    return Arrays.stream(Material.values()).
+                            filter(MaterialAPI::isValidItemMaterial).
+                            map(Enum::name).
+                            filter((name) -> input.isEmpty() || name.startsWith(input)).
+                            collect(Collectors.toCollection(ArrayList::new));
+                });
+        commands.getCommandCompletions().registerAsyncCompletion(
+                "types", (c) -> Arrays.asList("input", "output"));
+        commands.registerCommand(SetCommand.INSTANCE);
 	}
 
+    @Override
 	public void onDisable() {
+	    instance = null;
+        super.onDisable();
+        // Load Enchantment Abbreviations
+        ENCHANT_ABBREVS.clear();
+        // Unload Commands
+        commands.unregisterCommands();
+    }
 
-	}
+    public static ItemExchangePlugin getInstance() {
+	    return instance;
+    }
 
-	public void registerEvents() {
-		try {
-			getServer().getPluginManager().registerEvents(new ItemExchangeListener(), this);
-		}
-		catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void initConfig() {
-	}
-
-	public void importCSVs() {
-
-		this.saveResource("materials.csv", true);
-		// Read Items
-		try {
-			BufferedReader CSVFile = new BufferedReader(new FileReader("plugins/ItemExchange/materials.csv"));
-			String dataRow = CSVFile.readLine();
-			while (dataRow != null) {
-				String[] dataArray = dataRow.split(",");
-				ItemExchangePlugin.NAME_MATERIAL.put(dataArray[0].toLowerCase().replace(" ", ""), new ItemStack(DeprecatedMethods.getMaterialById(Integer.valueOf(dataArray[2]).intValue()), 1, Short.valueOf(dataArray[3])));
-				ItemExchangePlugin.MATERIAL_NAME.put(new ItemStack(DeprecatedMethods.getMaterialById(Integer.valueOf(dataArray[2]).intValue()), 1, Short.valueOf(dataArray[3])), dataArray[0]);
-				dataRow = CSVFile.readLine();
-			}
-			CSVFile.close();
-		}
-		catch (IOException ex) {
-			ex.printStackTrace();
-		}
-		// Read enchantments
-		this.saveResource("enchantments.csv", true);
-		try {
-			BufferedReader CSVFile = new BufferedReader(new FileReader("plugins/ItemExchange/enchantments.csv"));
-			String dataRow = CSVFile.readLine();
-			while (dataRow != null) {
-				String[] dataArray = dataRow.split(",");
-				ItemExchangePlugin.ABBRV_ENCHANTMENT.put(dataArray[0], dataArray[1]);
-				ItemExchangePlugin.ENCHANTMENT_ABBRV.put(dataArray[1], dataArray[0]);
-				ItemExchangePlugin.ENCHANTMENT_NAME.put(dataArray[1], dataArray[2]);
-				dataRow = CSVFile.readLine();
-			}
-			CSVFile.close();
-		}
-		catch (IOException ex) {
-			ex.printStackTrace();
-		}
-	}
-
-	public static void sendConsoleMessage(String message) {
-		Bukkit.getLogger().info("ItemExchange: " + message);
-	}
 }
