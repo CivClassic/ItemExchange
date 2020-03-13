@@ -1,101 +1,125 @@
 package com.untamedears.itemexchange;
 
 import co.aikar.commands.BukkitCommandManager;
-import com.google.common.base.Strings;
+import com.untamedears.itemexchange.commands.CreateCommand;
 import com.untamedears.itemexchange.commands.SetCommand;
-import com.untamedears.itemexchange.listeners.ItemExchangeListener;
+import com.untamedears.itemexchange.rules.BulkExchangeRule;
+import com.untamedears.itemexchange.rules.ExchangeRule;
 import com.untamedears.itemexchange.utility.Permission;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.bukkit.Material;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 import vg.civcraft.mc.civmodcore.ACivMod;
 import vg.civcraft.mc.civmodcore.api.MaterialAPI;
-import vg.civcraft.mc.civmodcore.itemHandling.NiceNames;
+import vg.civcraft.mc.civmodcore.util.TextUtil;
 
 public class ItemExchangePlugin extends ACivMod {
 
     public static final Permission PURCHASE_PERMISSION = new Permission(
-            "ITEM_EXCHANGE_GROUP_VIEW_PURCHASE", Permission.membersAndAbove(),
-            "The ability to view and purchase exchanges set to this group.");
+            "ITEM_EXCHANGE_GROUP_PURCHASE",
+            Permission.membersAndAbove(),
+            "The ability to purchase exchanges set to this group.");
 
     public static final Permission ESTABLISH_PERMISSION = new Permission(
-            "ITEM_EXCHANGE_GROUP_ESTABLISH", Permission.modsAndAbove(),
+            "ITEM_EXCHANGE_GROUP_ESTABLISH",
+            Permission.modsAndAbove(),
             "The ability to set exchanges to be exclusive to this group.");
-
-    public static final Map<Enchantment, String> ENCHANT_ABBREVS = new HashMap<>();
-
-    private static BukkitCommandManager commands;
 
     private static ItemExchangePlugin instance;
 
-	// Blocks that can be used as exchanges, any block with an inventory
-	// *should* works
-	public static final List<Material> ACCEPTABLE_BLOCKS = Arrays.asList(Material.CHEST, Material.DISPENSER, Material.TRAPPED_CHEST, Material.DROPPER);
-	public static final List<Material> ENCHANTABLE_ITEMS = Arrays.asList(Material.DIAMOND_HELMET, Material.DIAMOND_CHESTPLATE, Material.DIAMOND_LEGGINGS, Material.DIAMOND_BOOTS, 
-			Material.GOLD_HELMET, Material.GOLD_CHESTPLATE, Material.GOLD_LEGGINGS, Material.GOLD_BOOTS, 
-			Material.IRON_HELMET, Material.IRON_CHESTPLATE, Material.IRON_LEGGINGS, Material.IRON_BOOTS, 
-			Material.LEATHER_HELMET, Material.LEATHER_CHESTPLATE, Material.LEATHER_LEGGINGS, Material.LEATHER_BOOTS, 
-			Material.DIAMOND_SWORD, Material.GOLD_SWORD, Material.STONE_SWORD, Material.WOOD_SWORD, 
-			Material.DIAMOND_AXE, Material.GOLD_AXE, Material.STONE_AXE, Material.WOOD_AXE, 
-			Material.DIAMOND_PICKAXE, Material.GOLD_PICKAXE, Material.STONE_PICKAXE, Material.WOOD_PICKAXE, 
-			Material.DIAMOND_SPADE, Material.GOLD_SPADE, Material.STONE_SPADE, Material.WOOD_SPADE, 
-			Material.DIAMOND_HOE, Material.GOLD_HOE, Material.STONE_HOE, Material.WOOD_HOE, 
-			Material.BOW, Material.SHEARS, Material.FISHING_ROD, Material.FLINT_AND_STEEL, Material.CARROT_STICK);
+    private static BukkitCommandManager commands;
 
-	public static final ItemStack ITEM_RULE_ITEMSTACK = new ItemStack(Material.STONE_BUTTON, 1);
-	public static final Material ITEM_RULE_MATERIAL = ITEM_RULE_ITEMSTACK.getType();
+    public static final Set<Material> SHOP_BLOCKS = new HashSet<>();
 
-	@Override
-	public void onEnable() {
-	    instance = this;
-	    super.onEnable();
+    public static final ItemStack RULE_ITEM = new ItemStack(Material.STONE_BUTTON);
+
+    public static final Set<Material> CAN_ENCHANT = new HashSet<>();
+
+    @Override
+    public void onEnable() {
+        instance = this;
+        super.onEnable();
         saveDefaultConfig();
-		// Register Permissions
+        // Register Permissions
         PURCHASE_PERMISSION.register();
         ESTABLISH_PERMISSION.register();
         // Register Events
-        registerEvents(new ItemExchangeListener());
-        // Load Enchantment Abbreviations
-        for (Enchantment enchantment : Enchantment.values()) {
-            String abbrev = NiceNames.getAcronym(enchantment);
-            if (!Strings.isNullOrEmpty(abbrev)) {
-                ENCHANT_ABBREVS.put(enchantment, abbrev);
-            }
-        }
+        registerEvent(new ItemExchangeListener());
         // Load Commands
         commands = new BukkitCommandManager(this);
-        commands.getCommandCompletions().registerAsyncCompletion(
-                "materials", (context) -> {
-                    String input = context.getInput();
-                    return Arrays.stream(Material.values()).
-                            filter(MaterialAPI::isValidItemMaterial).
-                            map(Enum::name).
-                            filter((name) -> input.isEmpty() || name.startsWith(input)).
-                            collect(Collectors.toCollection(ArrayList::new));
-                });
-        commands.getCommandCompletions().registerAsyncCompletion(
-                "types", (c) -> Arrays.asList("input", "output"));
+        commands.getCommandCompletions().registerAsyncCompletion("materials", (context) -> Arrays.stream(Material.values()).
+                filter(MaterialAPI::isValidItemMaterial).
+                map(Enum::name).
+                filter((name) -> TextUtil.startsWith(name, context.getInput())).
+                collect(Collectors.toCollection(ArrayList::new)));
+        commands.getCommandCompletions().registerAsyncCompletion("types", (c) -> Arrays.asList("input", "output"));
+        commands.registerCommand(CreateCommand.INSTANCE);
         commands.registerCommand(SetCommand.INSTANCE);
-	}
+        // Register Serializables
+        registerSerializable(ExchangeRule.class);
+        registerSerializable(BulkExchangeRule.class);
+        // Parse Config
+        SHOP_BLOCKS.clear();
+        for (String raw : getConfig().getStringList("supportedBlocks")) {
+            Material material = MaterialAPI.getMaterial(raw);
+            if (material == null) {
+                warning("[Config] Could not parse material for supported block: " + raw);
+                continue;
+            }
+            if (SHOP_BLOCKS.contains(material)) {
+                warning("[Config] Supported block material duplicate: " + raw);
+                continue;
+            }
+            info("[Config] Supported block material parsed: " + material.name());
+            SHOP_BLOCKS.add(material);
+        }
+        if (SHOP_BLOCKS.isEmpty()) {
+            warning("[Config] There are no supported blocks, try: supportedBlocks: [CHEST, TRAPPED_CHEST]");
+        }
+        RULE_ITEM.setType(Material.STONE_BUTTON);
+        {
+            String raw = getConfig().getString("ruleItem");
+            Material material = MaterialAPI.getMaterial(raw);
+            if (material == null) {
+                warning("[Config] Could not parse material for rule item, default to STONE_BUTTON: " + raw);
+            }
+            else {
+                info("[Config] Rule item material parsed: " + material.name());
+                RULE_ITEM.setType(material);
+            }
+        }
+        CAN_ENCHANT.clear();
+        for (String raw : getConfig().getStringList("enchantables")) {
+            Material material = MaterialAPI.getMaterial(raw);
+            if (material == null) {
+                warning("[Config] Could not parse enchantable material: " + raw);
+                continue;
+            }
+            if (CAN_ENCHANT.contains(material)) {
+                warning("[Config] Enchantable material duplicate: " + raw);
+                continue;
+            }
+            info("[Config] Enchantable material parsed: " + material.name());
+            CAN_ENCHANT.add(material);
+        }
+    }
 
     @Override
-	public void onDisable() {
-	    instance = null;
-        super.onDisable();
-        // Load Enchantment Abbreviations
-        ENCHANT_ABBREVS.clear();
+    public void onDisable() {
         // Unload Commands
         commands.unregisterCommands();
+        commands = null;
+        // Finalise Disable
+        super.onDisable();
+        instance = null;
     }
 
     public static ItemExchangePlugin getInstance() {
-	    return instance;
+        return instance;
     }
 
 }

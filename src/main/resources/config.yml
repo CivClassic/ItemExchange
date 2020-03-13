@@ -1,27 +1,67 @@
 enabled: true
 debug: false
 
-# The section symbol that's used for ItemExchange encoding, default: §
-sectionSymbol: "�"
-
 # The blocks that are valid shop blocks for ItemExchange.
 # Setting the button to true allows that material to trigger the successful exchange button, default: false
 # The block must have a natively retrievable inventory.
-validShopBlocks:
-  - material: "CHEST"
-    durability: 0
-    button: true
-  - material: "TRAPPED_CHEST"
-    durability: 0
-    button: true
-  - material: "DISPENSER"
-    durability: 0
-    button: false
-  - material: "DROPPER"
-    durability: 0
-    button: false
+supportedBlocks:
+  - "CHEST"
+  - "TRAPPED_CHEST"
+  - "DISPENSER"
+  - "DROPPER"
 
-# The item of which the exchange data will be encoded onto.
-ruleItem:
-  material: "STONE_BUTTON"
-  durability: 0
+# The item of which the exchange data will be encoded onto, eg: STONE_BUTTON:0
+ruleItem: "STONE_BUTTON"
+
+enchantables:
+  - "DIAMOND_HELMET"
+  - "DIAMOND_CHESTPLATE"
+  - "DIAMOND_LEGGINGS"
+  - "DIAMOND_BOOTS"
+  - "GOLD_HELMET"
+  - "GOLD_CHESTPLATE"
+  - "GOLD_LEGGINGS"
+  - "GOLD_BOOTS"
+  - "IRON_HELMET"
+  - "IRON_CHESTPLATE"
+  - "IRON_LEGGINGS"
+  - "IRON_BOOTS"
+  - "CHAINMAIL_HELMET"
+  - "CHAINMAIL_CHESTPLATE"
+  - "CHAINMAIL_LEGGINGS"
+  - "CHAINMAIL_BOOTS"
+  - "LEATHER_HELMET"
+  - "LEATHER_CHESTPLATE"
+  - "LEATHER_LEGGINGS"
+  - "LEATHER_BOOTS"
+  - "DIAMOND_SWORD"
+  - "GOLD_SWORD"
+  - "IRON_SWORD"
+  - "STONE_SWORD"
+  - "WOOD_SWORD"
+  - "DIAMOND_AXE"
+  - "GOLD_AXE"
+  - "IRON_AXE"
+  - "STONE_AXE"
+  - "WOOD_AXE"
+  - "DIAMOND_PICKAXE"
+  - "GOLD_PICKAXE"
+  - "IRON_PICKAXE"
+  - "STONE_PICKAXE"
+  - "WOOD_PICKAXE"
+  - "DIAMOND_SPADE"
+  - "GOLD_SPADE"
+  - "IRON_SPADE"
+  - "STONE_SPADE"
+  - "WOOD_SPADE"
+  - "DIAMOND_HOE"
+  - "GOLD_HOE"
+  - "IRON_HOE"
+  - "STONE_HOE"
+  - "WOOD_HOE"
+  - "BOW"
+  - "SHEARS"
+  - "FISHING_ROD"
+  - "FLINT_AND_STEEL"
+  - "CARROT_STICK"
+  - "SHIELD"

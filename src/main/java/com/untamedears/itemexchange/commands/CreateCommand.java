@@ -9,14 +9,22 @@ import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Split;
 import co.aikar.commands.annotation.Syntax;
 import com.google.common.base.Strings;
-import com.untamedears.itemexchange.utility.ExchangeRule;
-import com.untamedears.itemexchange.utility.ExchangeRule.RuleType;
+import com.untamedears.itemexchange.ItemExchangePlugin;
+import com.untamedears.itemexchange.rules.ExchangeRule;
+import com.untamedears.itemexchange.rules.ExchangeRule.Type;
+import com.untamedears.itemexchange.utility.Permission;
+import com.untamedears.itemexchange.utility.Utilities;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.util.BlockIterator;
 import vg.civcraft.mc.civmodcore.api.ItemAPI;
 import vg.civcraft.mc.civmodcore.api.MaterialAPI;
+import vg.civcraft.mc.civmodcore.util.NullCoalescing;
 
 @SuppressWarnings("unused")
 @CommandAlias(CreateCommand.ALIAS)
@@ -24,106 +32,136 @@ public class CreateCommand extends BaseCommand {
 
     public static final String ALIAS = "iecreate|iec";
 
+    public static final Permission CITADEL_CHEST_PERMISSION = new Permission("CHESTS");
+
     public static final CreateCommand INSTANCE = new CreateCommand();
 
-    private CreateCommand() { }
+    private CreateCommand() {
+    }
 
     @Default
     @Description("Creates an exchange rule based on a shop block.")
     public void createFromShop(Player player) {
-        throw new InvalidCommandArgument("Coming soon!");
-//        //If no input or ouptut is specified player attempt to set up ItemExchange at the block the player is looking at
-//        //The player must have citadel access to the inventory block
-//        if (args.length == 0) {
-//            BlockIterator iter = new BlockIterator(player,6);
-//            while(iter.hasNext()) {
-//                Block block = iter.next();
-//                if (ItemExchangePlugin.ACCEPTABLE_BLOCKS.contains(block.getState().getType())) {
-//                    PlayerInteractEvent event = new PlayerInteractEvent(player, Action.RIGHT_CLICK_BLOCK, player.getInventory().getItemInMainHand(), block, BlockFace.UP);
-//
-//                    Bukkit.getPluginManager().callEvent(event);
-//
-//                    if(!event.isCancelled())
-//                        player.sendMessage(ItemExchange.createExchange(block.getLocation(), player));
-//                    return true;
-//                }
-//            }
-//            player.sendMessage(ChatColor.RED + "No block in view is suitable for an Item Exchange.");
-//        }
+        BlockIterator ray = new BlockIterator(player, 6);
+        while (ray.hasNext()) {
+            Block block = ray.next();
+            if (block == null || !block.getType().isBlock()) {
+                continue;
+            }
+            if (!ItemExchangePlugin.SHOP_BLOCKS.contains(block.getType())) {
+                break;
+            }
+            if (!CITADEL_CHEST_PERMISSION.hasAccess(Utilities.getReinforcementGroupFromBlock(block), player)) {
+                throw new InvalidCommandArgument("You do not have access to that.");
+            }
+            Inventory inventory = NullCoalescing.chain(() -> ((InventoryHolder) block.getState()).getInventory());
+            if (inventory == null) {
+                throw new InvalidCommandArgument("You do not have access to that.");
+            }
+            ItemStack inputItem = null;
+            ItemStack outputItem = null;
+            for (ItemStack item : inventory.getContents()) {
+                if (!ItemAPI.isValidItem(item)) {
+                    continue;
+                }
+                if (inputItem == null) {
+                    inputItem = item.clone();
+                }
+                else if (inputItem.isSimilar(item)) {
+                    inputItem.setAmount(inputItem.getAmount() + item.getAmount());
+                }
+                else if (outputItem == null) {
+                    outputItem = item.clone();
+                }
+                else if (outputItem.isSimilar(item)) {
+                    outputItem.setAmount(outputItem.getAmount() + item.getAmount());
+                }
+                else {
+                    throw new InvalidCommandArgument("Inventory should only contain two types of items!");
+                }
+            }
+            if (inputItem == null) {
+                throw new InvalidCommandArgument("Inventory should have at least one type of item.");
+            }
+            if (Utilities.isExchangeRule(inputItem)) {
+                throw new InvalidCommandArgument("You cannot exchange rule blocks!");
+            }
+            ExchangeRule inputRule = new ExchangeRule();
+            inputRule.setType(Type.INPUT);
+            inputRule.trace(inputItem);
+            if (outputItem == null) {
+                Utilities.giveItemsOrDrop(inventory, inputRule.toItem());
+            }
+            else {
+                if (Utilities.isExchangeRule(outputItem)) {
+                    throw new InvalidCommandArgument("You cannot exchange rule blocks!");
+                }
+                ExchangeRule outputRule = new ExchangeRule();
+                outputRule.setType(Type.OUTPUT);
+                outputRule.trace(outputItem);
+                Utilities.giveItemsOrDrop(inventory, inputRule.toItem(), outputRule.toItem());
+            }
+            player.sendMessage(ChatColor.GREEN + "Created exchange successfully.");
+        }
+        throw new InvalidCommandArgument("No block in view is a suitable shop block.");
     }
 
     @CommandAlias(CreateCommand.ALIAS)
     @Syntax("<type>")
     @Description("Creates an exchange rule based on a held item.")
     @CommandCompletion("@types")
-    public void base(Player player, String type) {
+    public void createFromHeld(Player player, String type) {
         ItemStack held = player.getInventory().getItemInMainHand();
         if (!ItemAPI.isValidItem(held)) {
             throw new InvalidCommandArgument("You must be holding an item to do that.");
         }
-        giveExchangeRule(player, new ExchangeRule(
-                held.getType(),
-                held.getAmount(),
-                held.getDurability(),
-                matchType(type)));
+        ExchangeRule rule = new ExchangeRule();
+        rule.setType(matchType(type));
+        rule.trace(held);
+        Utilities.givePlayerExchangeRule(player, rule);
     }
 
     @CommandAlias(CreateCommand.ALIAS)
     @Syntax("<type> <material> [amount]")
     @Description("Sets the material of an exchange rule.")
     @CommandCompletion("@types @materials")
-    public void createExchange(Player player, String type, @Split(":") String[] slug, @Default("1") int amount) {
-        Material material = Material.getMaterial(slug[0].toUpperCase());
+    public void createFromDetails(Player player, String type, @Split(":") String[] slug, @Default("1") int amount) {
+        Material material = MaterialAPI.getMaterial(slug[0]);
         if (!MaterialAPI.isValidItemMaterial(material)) {
             throw new InvalidCommandArgument("You must enter a valid item material.");
         }
-        short durability = 0;
-        if (slug.length > 1) {
-            try {
-                durability = Short.parseShort(slug[1]);
-            }
-            catch (NumberFormatException ignored) {
-                durability = -1;
-            }
-            if (durability < 0) {
-                throw new InvalidCommandArgument("You must enter a valid durability.");
-            }
+        // TODO: Allow for people to NOT enter in a durability
+        short durability = NullCoalescing.chain(() -> Short.parseShort(slug[1]), (short) -1);
+        if (durability < 0) {
+            throw new InvalidCommandArgument("You must enter a valid durability.");
         }
         if (amount <= 0) {
             throw new InvalidCommandArgument("You must enter a valid amount.");
         }
-        giveExchangeRule(player, new ExchangeRule(
-                material,
-                amount,
-                durability,
-                matchType(type)));
+        ExchangeRule rule = new ExchangeRule();
+        rule.setType(matchType(type));
+        rule.setMaterial(material);
+        rule.setDurability(durability);
+        rule.setAmount(amount);
+        Utilities.givePlayerExchangeRule(player, rule);
     }
 
-    private RuleType matchType(String value) {
+    private Type matchType(String value) {
         if (!Strings.isNullOrEmpty(value)) {
             switch (value.toLowerCase()) {
                 case "i":
                 case "in":
                 case "input":
                 case "inputs":
-                    return RuleType.INPUT;
+                    return Type.INPUT;
                 case "o":
                 case "out":
                 case "output":
                 case "outputs":
-                    return RuleType.OUTPUT;
+                    return Type.OUTPUT;
             }
         }
         throw new InvalidCommandArgument("You must enter a valid exchange type.");
-    }
-
-    private void giveExchangeRule(Player player, ExchangeRule rule) {
-        PlayerInventory inventory = player.getInventory();
-        int index = inventory.firstEmpty();
-        if (index < 0) {
-            throw new InvalidCommandArgument("You need an empty slot to create an exchange rule.");
-        }
-        inventory.setItem(index, rule.toItemStack());
     }
 
 }

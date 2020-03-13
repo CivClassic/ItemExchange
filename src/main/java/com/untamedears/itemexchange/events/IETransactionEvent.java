@@ -7,42 +7,42 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.inventory.ItemStack;
 
 public class IETransactionEvent extends Event {
-	private static final HandlerList handlers = new HandlerList();
+    private static final HandlerList handlers = new HandlerList();
 
-	private Player player;
-	private Location location;
-	private ItemStack[] input;
-	private ItemStack[] output;
+    private Player player;
+    private Location location;
+    private ItemStack[] input;
+    private ItemStack[] output;
 
-	public IETransactionEvent(Player player, Location location, ItemStack[] input, ItemStack[] output) {
-		this.player = player;
-		this.location = location;
-		this.input = input;
-		this.output = output;
-	}
+    public IETransactionEvent(Player player, Location location, ItemStack[] input, ItemStack[] output) {
+        this.player = player;
+        this.location = location;
+        this.input = input;
+        this.output = output;
+    }
 
-	public Player getPlayer() {
-		return player;
-	}
+    public Player getPlayer() {
+        return player;
+    }
 
-	public Location getExchangeLocation() {
-		return location;
-	}
-	
-	public ItemStack[] getInput() {
-		return input;
-	}
-	
-	public ItemStack[] getOutput() {
-		return output;
-	}
+    public Location getExchangeLocation() {
+        return location;
+    }
 
-	@Override
-	public HandlerList getHandlers() {
-		return handlers;
-	}
+    public ItemStack[] getInput() {
+        return input;
+    }
 
-	public static HandlerList getHandlerList() {
-		return handlers;
-	}
+    public ItemStack[] getOutput() {
+        return output;
+    }
+
+    @Override
+    public HandlerList getHandlers() {
+        return handlers;
+    }
+
+    public static HandlerList getHandlerList() {
+        return handlers;
+    }
 }
