@@ -24,6 +24,7 @@ import vg.civcraft.mc.civmodcore.api.EnchantNames;
 import vg.civcraft.mc.civmodcore.api.InventoryAPI;
 import vg.civcraft.mc.civmodcore.api.ItemAPI;
 import vg.civcraft.mc.civmodcore.api.MaterialAPI;
+import vg.civcraft.mc.civmodcore.itemHandling.NiceNames;
 import vg.civcraft.mc.civmodcore.serialization.NBTCompound;
 import vg.civcraft.mc.civmodcore.serialization.NBTSerializable;
 import vg.civcraft.mc.civmodcore.serialization.NBTSerialization;
@@ -193,7 +194,9 @@ public final class ExchangeRule extends ExchangeData {
     }
 
     private String getRuleTitle() {
-        return ChatColor.YELLOW + (getType() == Type.INPUT ? "Input" : getType() == Type.OUTPUT ? "Output" : "Broken") + ": " + ChatColor.WHITE + getAmount() + " " + getListing();
+        return ChatColor.YELLOW +
+                (getType() == Type.INPUT ? "Input" : getType() == Type.OUTPUT ? "Output" : "Broken") + ": " +
+                ChatColor.WHITE + getAmount() + " " + getListing();
     }
 
     private List<String> getRuleDetails() {
@@ -204,10 +207,13 @@ public final class ExchangeRule extends ExchangeData {
         if (ItemExchangePlugin.CAN_ENCHANT.contains(getMaterial())) {
             for (Map.Entry<Enchantment, Integer> requiredEnchant : getRequiredEnchants().entrySet()) {
                 if (requiredEnchant.getValue() == ANY) {
-                    info.add(ChatColor.AQUA + EnchantNames.findByEnchantment(requiredEnchant.getKey()).getDisplayName());
+                    info.add(ChatColor.AQUA +
+                            EnchantNames.findByEnchantment(requiredEnchant.getKey()).getDisplayName());
                 }
                 else {
-                    info.add(ChatColor.AQUA + EnchantNames.findByEnchantment(requiredEnchant.getKey()).getDisplayName() + " " + requiredEnchant.getValue());
+                    info.add(ChatColor.AQUA +
+                            EnchantNames.findByEnchantment(requiredEnchant.getKey()).getDisplayName() + " " +
+                            requiredEnchant.getValue());
                 }
             }
             for (Enchantment excludedEnchant : getExcludedEnchants()) {
@@ -250,7 +256,10 @@ public final class ExchangeRule extends ExchangeData {
 
     public Type getType() {
         String raw = this.nbt.getString("type");
-        return raw == null ? Type.BROKEN : "INPUT".equalsIgnoreCase(raw) ? Type.INPUT : "OUTPUT".equalsIgnoreCase(raw) ? Type.OUTPUT : Type.BROKEN;
+        return raw == null ? Type.BROKEN :
+                "INPUT".equalsIgnoreCase(raw) ? Type.INPUT :
+                "OUTPUT".equalsIgnoreCase(raw) ? Type.OUTPUT :
+                Type.BROKEN;
     }
 
     public void setType(Type type) {
@@ -278,7 +287,14 @@ public final class ExchangeRule extends ExchangeData {
     public String getListing() {
         String listing = this.nbt.getString("listing");
         if (Strings.isNullOrEmpty(listing)) {
-            return Utilities.getItemName(new ItemStack(getMaterial(), 1, getDurability()));
+            Material material = getMaterial();
+            boolean discriminator = MaterialAPI.hasDiscriminator(material);
+            short durability = discriminator ? getDurability() : 0;
+            String niceName = NiceNames.getName(new ItemStack(material, 1, durability));
+            if (!Strings.isNullOrEmpty(niceName)) {
+                return niceName;
+            }
+            return material + (discriminator ? ":" + durability : "");
         }
         return listing;
     }
@@ -304,7 +320,12 @@ public final class ExchangeRule extends ExchangeData {
     }
 
     public void setDurability(short durability) {
-        this.nbt.setShort("durability", durability);
+        if (durability != 0) {
+            this.nbt.setShort("durability", durability);
+        }
+        else {
+            this.nbt.remove("durability");
+        }
     }
 
     public int getAmount() {
@@ -318,7 +339,9 @@ public final class ExchangeRule extends ExchangeData {
     public Map<Enchantment, Integer> getRequiredEnchants() {
         return Arrays.
                 stream(this.nbt.getCompoundArray("requiredEnchants")).
-                collect(Collectors.toMap((nbt) -> Enchantment.getByName(nbt.getString("enchant")), (nbt) -> nbt.getInteger("level")));
+                collect(Collectors.toMap((nbt) ->
+                        Enchantment.getByName(nbt.getString("enchant")),
+                        (nbt) -> nbt.getInteger("level")));
     }
 
     public void setRequiredEnchants(Map<Enchantment, Integer> requiredEnchants) {
@@ -363,7 +386,12 @@ public final class ExchangeRule extends ExchangeData {
     }
 
     public void setIgnoringDisplayName(boolean ignoringDisplayName) {
-        this.nbt.setBoolean("ignoringDisplayName", ignoringDisplayName);
+        if (ignoringDisplayName) {
+            this.nbt.setBoolean("ignoringDisplayName", ignoringDisplayName);
+        }
+        else {
+            this.nbt.remove("ignoringDisplayName");
+        }
     }
 
     public List<String> getLore() {
@@ -391,7 +419,7 @@ public final class ExchangeRule extends ExchangeData {
         try {
             return this.nbt.getCompound("extra").clone();
         }
-        catch (CloneNotSupportedException e) {
+        catch (CloneNotSupportedException ignored) {
             return new NBTCompound();
         }
     }
@@ -448,7 +476,8 @@ public final class ExchangeRule extends ExchangeData {
     }
 
     public ItemStack toItem() {
-        ItemStack item = NBTCompound.processItem(ItemExchangePlugin.RULE_ITEM.clone(), (nbt) -> nbt.setCompound("ExchangeRule", NBTSerialization.serialize(this)));
+        ItemStack item = NBTCompound.processItem(ItemExchangePlugin.RULE_ITEM.clone(), (nbt) ->
+                nbt.setCompound("ExchangeRule", NBTSerialization.serialize(this)));
         ItemAPI.handleItemMeta(item, (meta) -> {
             meta.setDisplayName(getRuleTitle());
             meta.setLore(getRuleDetails());

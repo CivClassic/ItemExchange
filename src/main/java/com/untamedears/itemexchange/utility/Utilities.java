@@ -31,38 +31,12 @@ import vg.civcraft.mc.civmodcore.api.EnchantAPI;
 import vg.civcraft.mc.civmodcore.api.InventoryAPI;
 import vg.civcraft.mc.civmodcore.api.ItemAPI;
 import vg.civcraft.mc.civmodcore.api.MaterialAPI;
-import vg.civcraft.mc.civmodcore.itemHandling.NiceNames;
 import vg.civcraft.mc.civmodcore.util.NullCoalescing;
 import vg.civcraft.mc.namelayer.GroupManager;
 import vg.civcraft.mc.namelayer.group.Group;
 import static vg.civcraft.mc.civmodcore.util.NullCoalescing.chain;
 
 public final class Utilities {
-
-
-    public static ItemStack createNormalisedItem(ItemStack item) {
-        if (item == null) {
-            return null;
-        }
-        ItemStack temp = item.clone();
-        temp.setAmount(1);
-        if (!MaterialAPI.hasDiscriminator(temp.getType())) {
-            temp.setDurability((short) 0);
-        }
-        return temp;
-    }
-
-    public static String getItemName(ItemStack item) {
-        item = createNormalisedItem(item);
-        if (!ItemAPI.isValidItem(item)) {
-            return "Invalid Item.";
-        }
-        String niceName = NiceNames.getName(item);
-        if (!Strings.isNullOrEmpty(niceName)) {
-            return niceName;
-        }
-        return item.getType() + (MaterialAPI.hasDiscriminator(item.getType()) ? ":" + item.getDurability() : "");
-    }
 
     public static Group getReinforcementGroupFromBlock(Block block) {
         return NullCoalescing.chain(() ->

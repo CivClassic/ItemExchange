@@ -129,18 +129,19 @@ public class CreateCommand extends BaseCommand {
         if (!MaterialAPI.isValidItemMaterial(material)) {
             throw new InvalidCommandArgument("You must enter a valid item material.");
         }
-        // TODO: Allow for people to NOT enter in a durability
-        short durability = NullCoalescing.chain(() -> Short.parseShort(slug[1]), (short) -1);
-        if (durability < 0) {
-            throw new InvalidCommandArgument("You must enter a valid durability.");
+        ExchangeRule rule = new ExchangeRule();
+        rule.setType(matchType(type));
+        rule.setMaterial(material);
+        if (slug.length > 1) {
+            short durability = NullCoalescing.chain(() -> Short.parseShort(slug[1]), (short) -1);
+            if (durability < 0) {
+                throw new InvalidCommandArgument("You must enter a valid durability.");
+            }
+            rule.setDurability(durability);
         }
         if (amount <= 0) {
             throw new InvalidCommandArgument("You must enter a valid amount.");
         }
-        ExchangeRule rule = new ExchangeRule();
-        rule.setType(matchType(type));
-        rule.setMaterial(material);
-        rule.setDurability(durability);
         rule.setAmount(amount);
         Utilities.givePlayerExchangeRule(player, rule);
     }
