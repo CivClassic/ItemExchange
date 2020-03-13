@@ -49,6 +49,7 @@ public final class ExchangeRule extends ExchangeData {
     public ExchangeRule() {
     }
 
+    @Override
     public boolean isValid() {
         if (!Utilities.contains(getType(), Type.INPUT, Type.OUTPUT)) {
             return false;

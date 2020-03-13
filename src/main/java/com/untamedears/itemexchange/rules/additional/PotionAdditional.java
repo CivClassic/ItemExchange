@@ -25,6 +25,11 @@ import vg.civcraft.mc.civmodcore.util.NullCoalescing;
 public final class PotionAdditional extends ExchangeData {
 
     @Override
+    public boolean isValid() {
+        return true;
+    }
+
+    @Override
     public void trace(ItemStack item) {
         ItemAPI.handleItemMeta(item, (PotionMeta meta) -> {
             setPotionData(meta.getBasePotionData());

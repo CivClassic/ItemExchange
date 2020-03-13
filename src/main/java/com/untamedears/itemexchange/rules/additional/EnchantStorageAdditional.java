@@ -23,6 +23,11 @@ import static vg.civcraft.mc.civmodcore.util.NullCoalescing.chain;
 public final class EnchantStorageAdditional extends ExchangeData {
 
     @Override
+    public boolean isValid() {
+        return true;
+    }
+
+    @Override
     public void trace(ItemStack item) {
         ItemAPI.handleItemMeta(item, (EnchantmentStorageMeta meta) -> {
             setEnchants(meta.getStoredEnchants());

@@ -14,6 +14,11 @@ import vg.civcraft.mc.civmodcore.util.NullCoalescing;
 public final class BookAdditional extends ExchangeData {
 
     @Override
+    public boolean isValid() {
+        return true;
+    }
+
+    @Override
     public void trace(ItemStack item) {
         ItemAPI.handleItemMeta(item, (BookMeta meta) -> {
             if (meta.hasTitle()) {

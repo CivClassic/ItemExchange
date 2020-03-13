@@ -22,6 +22,7 @@ public final class BulkExchangeRule extends ExchangeData {
     public BulkExchangeRule() {
     }
 
+    @Override
     public boolean isValid() {
         if (getRules().isEmpty()) {
             return false;
