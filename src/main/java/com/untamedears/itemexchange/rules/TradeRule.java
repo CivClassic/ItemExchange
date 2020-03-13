@@ -19,7 +19,24 @@ public final class TradeRule {
      * @return Returns true if the trade is valid.
      */
     public boolean isValid() {
-        return this.input != null;
+        if (this.input == null) {
+            return false;
+        }
+        if (!this.input.isValid()) {
+            return false;
+        }
+        if (this.input.getType() != Type.INPUT) {
+            return false;
+        }
+        if (this.output != null) {
+            if (!this.output.isValid()) {
+                return false;
+            }
+            if (this.output.getType() != Type.OUTPUT) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**

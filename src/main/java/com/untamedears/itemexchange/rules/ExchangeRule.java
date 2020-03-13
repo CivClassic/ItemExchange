@@ -5,6 +5,7 @@ import com.untamedears.itemexchange.ItemExchangePlugin;
 import com.untamedears.itemexchange.rules.additional.BookAdditional;
 import com.untamedears.itemexchange.rules.additional.EnchantStorageAdditional;
 import com.untamedears.itemexchange.rules.additional.PotionAdditional;
+import com.untamedears.itemexchange.rules.additional.RepairAdditional;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -47,6 +48,7 @@ public final class ExchangeRule extends ExchangeData {
     public static final short ERROR = -99;
 
     public ExchangeRule() {
+        this.nbt.setInteger("version", 2);
     }
 
     @Override
@@ -103,6 +105,9 @@ public final class ExchangeRule extends ExchangeData {
                 setExtra(PotionAdditional.fromItem(item));
                 break;
             default:
+                if (MaterialAPI.hasDurability(item.getType())) {
+                    setExtra(RepairAdditional.fromItem(item));
+                }
                 break;
         }
     }

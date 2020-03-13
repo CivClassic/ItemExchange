@@ -2,7 +2,6 @@ package com.untamedears.itemexchange.rules;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import org.bukkit.ChatColor;
