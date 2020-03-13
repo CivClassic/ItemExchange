@@ -217,6 +217,21 @@ public class SetCommand extends BaseCommand {
         Utilities.replaceHoldingExchangeRule(player, rule);
     }
 
+    @Subcommand("ignoredisplayname|ignoredisplay|ignorename")
+    @Description("Toggles the rule of ignoring display names.")
+    public void toggleIgnoreDisplayName(Player player) {
+        ExchangeRule rule = Utilities.ensureHoldingExchangeRule(player);
+        if (rule.isIgnoringDisplayName()) {
+            rule.setIgnoringDisplayName(false);
+            player.sendMessage(ChatColor.GREEN + "That rule will no longer ignore display names.");
+        }
+        else {
+            rule.setIgnoringDisplayName(true);
+            player.sendMessage(ChatColor.GREEN + "That rule will now ignore display names.");
+        }
+        Utilities.replaceHoldingExchangeRule(player, rule);
+    }
+
     @Subcommand("lore")
     @Description("Sets or resets the item's lore.")
     @Syntax("[...lore]")
