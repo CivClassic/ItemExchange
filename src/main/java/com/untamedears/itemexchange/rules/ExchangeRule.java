@@ -171,6 +171,15 @@ public final class ExchangeRule extends ExchangeData {
         return conforms[0];
     }
 
+    /**
+     * Gets the details title of this exchange rule.
+     *
+     * @return Return this exchange rule's details title.
+     *
+     * @apiNote This is essentially the first line of {@link ExchangeRule#getRuleDetails()} but needs to be separate
+     *              so that when creating a rule item, the item's display name is set to the title, and the remainder
+     *              of the details is set to the item's lore.
+     */
     private String getRuleTitle() {
         return ChatColor.YELLOW +
                 (getType() == Type.INPUT ? "Input" : getType() == Type.OUTPUT ? "Output" : "Broken") + ": " +
