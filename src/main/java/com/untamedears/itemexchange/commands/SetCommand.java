@@ -49,7 +49,7 @@ public class SetCommand extends BaseCommand {
         throw new InvalidCommandArgument();
     }
 
-    @Subcommand("material|mat")
+    @Subcommand("material|mat|m")
     @Description("Sets the material of an exchange rule.")
     @Syntax("<material>")
     @CommandCompletion("@materials")
@@ -61,19 +61,6 @@ public class SetCommand extends BaseCommand {
         }
         player.sendMessage(ChatColor.GREEN + "Material successfully changed.");
         rule.setMaterial(material);
-        Utilities.replaceHoldingExchangeRule(player, rule);
-    }
-
-    @Subcommand("amount|num|number")
-    @Description("Sets the amount of an exchange rule.")
-    @Syntax("<amount>")
-    public void setAmount(Player player, int amount) {
-        ExchangeRule rule = Utilities.ensureHoldingExchangeRule(player);
-        if (amount <= 0) {
-            throw new InvalidCommandArgument("You must enter a valid amount.");
-        }
-        player.sendMessage(ChatColor.GREEN + "Amount successfully changed.");
-        rule.setAmount(amount);
         Utilities.replaceHoldingExchangeRule(player, rule);
     }
 
@@ -120,6 +107,19 @@ public class SetCommand extends BaseCommand {
             rule.setDurability(durability);
             player.sendMessage(ChatColor.YELLOW + "Successfully set a new damage level!");
         }
+        Utilities.replaceHoldingExchangeRule(player, rule);
+    }
+
+    @Subcommand("amount|num|number|a")
+    @Description("Sets the amount of an exchange rule.")
+    @Syntax("<amount>")
+    public void setAmount(Player player, int amount) {
+        ExchangeRule rule = Utilities.ensureHoldingExchangeRule(player);
+        if (amount <= 0) {
+            throw new InvalidCommandArgument("You must enter a valid amount.");
+        }
+        player.sendMessage(ChatColor.GREEN + "Amount successfully changed.");
+        rule.setAmount(amount);
         Utilities.replaceHoldingExchangeRule(player, rule);
     }
 
