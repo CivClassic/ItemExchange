@@ -14,8 +14,6 @@ import org.bukkit.inventory.Inventory;
 
 public class BlockUtility {
 
-    public static final BlockFace[] cardinalFaces = new BlockFace[] { BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST, BlockFace.DOWN, BlockFace.UP };
-
     // Get the direction a block is facing
     public static BlockFace getFacingDirection(Block block) {
         byte data = DeprecatedMethods.getBlockMeta(block);

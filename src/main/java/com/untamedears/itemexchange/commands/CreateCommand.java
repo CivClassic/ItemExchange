@@ -26,7 +26,6 @@ import vg.civcraft.mc.civmodcore.api.ItemAPI;
 import vg.civcraft.mc.civmodcore.api.MaterialAPI;
 import vg.civcraft.mc.civmodcore.util.NullCoalescing;
 
-@SuppressWarnings("unused")
 @CommandAlias(CreateCommand.ALIAS)
 public class CreateCommand extends BaseCommand {
 

@@ -15,7 +15,7 @@ import org.javatuples.Pair;
 import vg.civcraft.mc.civmodcore.api.EnchantAPI;
 import vg.civcraft.mc.civmodcore.api.EnchantNames;
 import vg.civcraft.mc.civmodcore.api.ItemAPI;
-import vg.civcraft.mc.civmodcore.api.NBTCompound;
+import vg.civcraft.mc.civmodcore.serialization.NBTCompound;
 import vg.civcraft.mc.civmodcore.util.NullCoalescing;
 import static vg.civcraft.mc.civmodcore.util.NullCoalescing.chain;
 
@@ -63,9 +63,12 @@ public final class EnchantStorageAdditional extends ExchangeData {
             return Collections.singletonList(ChatColor.DARK_AQUA + "No stored enchants.");
         }
         else {
-            return Collections.singletonList(ChatColor.DARK_AQUA + "Stored enchants: " + ChatColor.YELLOW + getEnchants().entrySet().stream().
+            return Collections.singletonList(ChatColor.DARK_AQUA + "Stored enchants: " +
+                    ChatColor.YELLOW + getEnchants().entrySet().stream().
                     filter((entry) -> EnchantAPI.isSafeEnchantment(entry.getKey(), entry.getValue())).
-                    map((entry) -> NullCoalescing.chain(() -> EnchantNames.findByEnchantment(entry.getKey()).getAbbreviation(), "UNKNOWN") + entry.getValue()).
+                    map((entry) -> NullCoalescing.chain(() ->
+                            EnchantNames.findByEnchantment(entry.getKey()).getAbbreviation(), "UNKNOWN") +
+                            entry.getValue()).
                     collect(Collectors.joining(" ")));
         }
     }
@@ -77,7 +80,8 @@ public final class EnchantStorageAdditional extends ExchangeData {
     public Map<Enchantment, Integer> getEnchants() {
         return Arrays.
                 stream(this.nbt.getCompoundArray("bookEnchants")).
-                collect(Collectors.toMap((nbt) -> Enchantment.getByName(nbt.getString("enchant")), (nbt) -> nbt.getInteger("level")));
+                collect(Collectors.toMap((nbt) ->
+                        Enchantment.getByName(nbt.getString("enchant")), (nbt) -> nbt.getInteger("level")));
     }
 
     public void setEnchants(Map<Enchantment, Integer> enchants) {
@@ -99,7 +103,9 @@ public final class EnchantStorageAdditional extends ExchangeData {
         EnchantStorageAdditional additional = new EnchantStorageAdditional();
         additional.setEnchants(Arrays.stream(parts).
                 map((raw) -> raw.split(ExchangeRule.TERTIARY_SPACER)).
-                map((raw) -> new Pair<>(NullCoalescing.chain(() -> EnchantAPI.getEnchantment(raw[0])), NullCoalescing.chain(() -> Integer.parseInt(raw[1]), 0))).
+                map((raw) -> new Pair<>(
+                        NullCoalescing.chain(() -> EnchantAPI.getEnchantment(raw[0])),
+                        NullCoalescing.chain(() -> Integer.parseInt(raw[1]), 0))).
                 filter((pair) -> EnchantAPI.isSafeEnchantment(pair.getValue0(), pair.getValue1())).
                 collect(Collectors.toMap(Pair::getValue0, Pair::getValue1)));
         return additional.getNBT();

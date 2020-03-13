@@ -68,7 +68,8 @@ public final class ShopRule {
         if (trade == null) {
             throw new NullPointerException("Could not message player about trade... this shouldn't happen.");
         }
-        player.sendMessage(ChatColor.YELLOW + "(" + (this.currentTradeIndex + 1) + "/" + this.trades.size() + ") exchanges present.");
+        player.sendMessage(ChatColor.YELLOW + "(" + (this.currentTradeIndex + 1) + "/" + this.trades.size() +
+                ") exchanges present.");
         for (String line : trade.getInput().getDisplayedInfo()) {
             player.sendMessage(line);
         }

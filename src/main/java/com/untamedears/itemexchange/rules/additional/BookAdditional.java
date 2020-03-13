@@ -8,7 +8,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.inventory.meta.BookMeta.Generation;
 import vg.civcraft.mc.civmodcore.api.ItemAPI;
-import vg.civcraft.mc.civmodcore.api.NBTCompound;
+import vg.civcraft.mc.civmodcore.serialization.NBTCompound;
 import vg.civcraft.mc.civmodcore.util.NullCoalescing;
 
 public final class BookAdditional extends ExchangeData {

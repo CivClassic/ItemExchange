@@ -118,7 +118,8 @@ public class Permission {
         if (permission == null) {
             return false;
         }
-        return NullCoalescing.chain(() -> NameAPI.getGroupManager().hasAccess(group, player.getUniqueId(), permission), false);
+        return NullCoalescing.chain(() ->
+                NameAPI.getGroupManager().hasAccess(group, player.getUniqueId(), permission), false);
     }
 
     /**

@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 import org.bukkit.ChatColor;
 import org.bukkit.inventory.ItemStack;
 import vg.civcraft.mc.civmodcore.api.ItemAPI;
-import vg.civcraft.mc.civmodcore.api.NBTCompound;
+import vg.civcraft.mc.civmodcore.serialization.NBTCompound;
 import vg.civcraft.mc.civmodcore.serialization.NBTSerializable;
 import vg.civcraft.mc.civmodcore.serialization.NBTSerialization;
 import static vg.civcraft.mc.civmodcore.util.NullCoalescing.chain;
@@ -70,10 +70,13 @@ public final class BulkExchangeRule extends ExchangeData {
     }
 
     public ItemStack toItem() {
-        ItemStack item = NBTCompound.processItem(ItemExchangePlugin.RULE_ITEM.clone(), (nbt) -> nbt.setCompound("BulkExchangeRule", NBTSerialization.serialize(this)));
+        ItemStack item = NBTCompound.processItem(ItemExchangePlugin.RULE_ITEM.clone(), (nbt) ->
+                nbt.setCompound("BulkExchangeRule", NBTSerialization.serialize(this)));
         ItemAPI.handleItemMeta(item, (meta) -> {
             meta.setDisplayName(ChatColor.RED + "Bulk Rule Block");
-            meta.setLore(Collections.singletonList("This rule block holds " + getRules().size() + " exchange rule" + (getRules().size() == 1 ? "" : "s") + "."));
+            meta.setLore(Collections.singletonList(
+                    "This rule block holds " + getRules().size() + " exchange rule" +
+                    (getRules().size() == 1 ? "" : "s") + "."));
             return true;
         });
         return item;

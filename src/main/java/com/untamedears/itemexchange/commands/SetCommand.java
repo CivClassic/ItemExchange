@@ -30,7 +30,6 @@ import vg.civcraft.mc.civmodcore.util.TextUtil;
 import vg.civcraft.mc.namelayer.GroupManager;
 import vg.civcraft.mc.namelayer.group.Group;
 
-@SuppressWarnings("unused")
 @CommandAlias(SetCommand.ALIAS)
 public class SetCommand extends BaseCommand {
 

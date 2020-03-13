@@ -70,7 +70,8 @@ public class ItemExchangeListener implements Listener {
         }
         this.playerInteractionCooldowns.put(player, now);
         // Attempt to create parse a shop from the inventory
-        Inventory inventory = NullCoalescing.chain(() -> ((InventoryHolder) event.getClickedBlock().getState()).getInventory());
+        Inventory inventory = NullCoalescing.chain(() ->
+                ((InventoryHolder) event.getClickedBlock().getState()).getInventory());
         ShopRule shop = ShopRule.getItemExchange(inventory);
         if (shop == null) {
             return;
@@ -79,7 +80,9 @@ public class ItemExchangeListener implements Listener {
         // If not then switch over to this shop and display its catalogue
         boolean justBrowsing = false;
         boolean shouldCycle = true;
-        if (!this.shopRecord.containsKey(player) || !inventory.equals(this.shopRecord.get(player)) || !this.ruleIndex.containsKey(player)) {
+        if (!this.shopRecord.containsKey(player) ||
+                !inventory.equals(this.shopRecord.get(player)) ||
+                !this.ruleIndex.containsKey(player)) {
             this.shopRecord.put(player, inventory);
             this.ruleIndex.put(player, 0);
             justBrowsing = true;
@@ -133,10 +136,17 @@ public class ItemExchangeListener implements Listener {
         // Attempt to transfer the items between the shop and the buyer
         boolean successfulTransfer;
         if (outputItems == null) {
-            successfulTransfer = InventoryAPI.safelyTransactBetweenInventories(player.getInventory(), inputItems.toArray(new ItemStack[0]), inventory);
+            successfulTransfer = InventoryAPI.safelyTransactBetweenInventories(
+                    player.getInventory(),
+                    inputItems.toArray(new ItemStack[0]),
+                    inventory);
         }
         else {
-            successfulTransfer = InventoryAPI.safelyTradeBetweenInventories(player.getInventory(), inputItems.toArray(new ItemStack[0]), inventory, outputItems.toArray(new ItemStack[0]));
+            successfulTransfer = InventoryAPI.safelyTradeBetweenInventories(
+                    player.getInventory(),
+                    inputItems.toArray(new ItemStack[0]),
+                    inventory,
+                    outputItems.toArray(new ItemStack[0]));
         }
         if (!successfulTransfer) {
             player.sendMessage(ChatColor.RED + "Could not complete that transaction!");

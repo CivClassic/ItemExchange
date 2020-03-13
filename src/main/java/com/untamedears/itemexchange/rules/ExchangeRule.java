@@ -24,7 +24,7 @@ import vg.civcraft.mc.civmodcore.api.EnchantNames;
 import vg.civcraft.mc.civmodcore.api.InventoryAPI;
 import vg.civcraft.mc.civmodcore.api.ItemAPI;
 import vg.civcraft.mc.civmodcore.api.MaterialAPI;
-import vg.civcraft.mc.civmodcore.api.NBTCompound;
+import vg.civcraft.mc.civmodcore.serialization.NBTCompound;
 import vg.civcraft.mc.civmodcore.serialization.NBTSerializable;
 import vg.civcraft.mc.civmodcore.serialization.NBTSerialization;
 import vg.civcraft.mc.civmodcore.util.NullCoalescing;

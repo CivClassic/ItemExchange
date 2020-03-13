@@ -19,7 +19,7 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
 import vg.civcraft.mc.civmodcore.api.ItemAPI;
-import vg.civcraft.mc.civmodcore.api.NBTCompound;
+import vg.civcraft.mc.civmodcore.serialization.NBTCompound;
 import vg.civcraft.mc.civmodcore.util.NullCoalescing;
 
 public final class PotionAdditional extends ExchangeData {
@@ -138,7 +138,10 @@ public final class PotionAdditional extends ExchangeData {
 
     public PotionData getPotionData() {
         NBTCompound nbt = this.nbt.getCompound("base");
-        return new PotionData(NullCoalescing.chain(() -> PotionType.valueOf(nbt.getString("type")), PotionType.UNCRAFTABLE), nbt.getBoolean("extended"), nbt.getBoolean("upgraded"));
+        return new PotionData(
+                NullCoalescing.chain(() -> PotionType.valueOf(nbt.getString("type")), PotionType.UNCRAFTABLE),
+                nbt.getBoolean("extended"),
+                nbt.getBoolean("upgraded"));
     }
 
     public void setPotionData(PotionData data) {
@@ -151,7 +154,12 @@ public final class PotionAdditional extends ExchangeData {
 
     public List<PotionEffect> getEffects() {
         return Arrays.stream(this.nbt.getCompoundArray("effects")).
-                map((nbt) -> new PotionEffect(NullCoalescing.chain(() -> PotionEffectType.getByName(nbt.getString("type"))), nbt.getInteger("duration"), nbt.getInteger("amplifier"), nbt.getBoolean("ambient"), nbt.getBoolean("particles"))).
+                map((nbt) -> new PotionEffect(
+                        NullCoalescing.chain(() -> PotionEffectType.getByName(nbt.getString("type"))),
+                        nbt.getInteger("duration"),
+                        nbt.getInteger("amplifier"),
+                        nbt.getBoolean("ambient"),
+                        nbt.getBoolean("particles"))).
                 collect(Collectors.toCollection(ArrayList::new));
     }
 
@@ -216,7 +224,9 @@ public final class PotionAdditional extends ExchangeData {
                 }
                 catch (Exception error) {
                     data.setPotionData(new PotionData(PotionType.WATER, false, false));
-                    Bukkit.getLogger().log(Level.WARNING, "An error occurred parsing ItemExchange potion metadata: base effect. " + "Defaulting to a water bottle.", error);
+                    Bukkit.getLogger().log(Level.WARNING,
+                            "An error occurred parsing ItemExchange potion metadata: base effect. " +
+                            "Defaulting to a water bottle.", error);
                 }
             }
             // Parse any other effect
@@ -231,7 +241,9 @@ public final class PotionAdditional extends ExchangeData {
                     effects.add(new PotionEffect(type, duration, amplifier, ambient));
                 }
                 catch (Exception error) {
-                    Bukkit.getLogger().log(Level.WARNING, "An error occurred parsing ItemExchange potion metadata: " + "custom effect. Skipping.", error);
+                    Bukkit.getLogger().log(Level.WARNING,
+                            "An error occurred parsing ItemExchange potion metadata: " +
+                            "custom effect. Skipping.", error);
                 }
             }
         }

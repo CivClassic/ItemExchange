@@ -2,7 +2,7 @@ package com.untamedears.itemexchange.rules;
 
 import java.util.List;
 import org.bukkit.inventory.ItemStack;
-import vg.civcraft.mc.civmodcore.api.NBTCompound;
+import vg.civcraft.mc.civmodcore.serialization.NBTCompound;
 import vg.civcraft.mc.civmodcore.serialization.NBTSerializable;
 import vg.civcraft.mc.civmodcore.serialization.NBTSerializationException;
 

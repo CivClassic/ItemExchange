@@ -26,6 +26,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import vg.civcraft.mc.citadel.Citadel;
 import vg.civcraft.mc.citadel.reinforcement.PlayerReinforcement;
+import vg.civcraft.mc.civmodcore.api.BlockAPI;
 import vg.civcraft.mc.civmodcore.api.EnchantAPI;
 import vg.civcraft.mc.civmodcore.api.InventoryAPI;
 import vg.civcraft.mc.civmodcore.api.ItemAPI;
@@ -64,7 +65,8 @@ public final class Utilities {
     }
 
     public static Group getReinforcementGroupFromBlock(Block block) {
-        return NullCoalescing.chain(() -> ((PlayerReinforcement) Citadel.getReinforcementManager().getReinforcement(block)).getGroup());
+        return NullCoalescing.chain(() ->
+                ((PlayerReinforcement) Citadel.getReinforcementManager().getReinforcement(block)).getGroup());
     }
 
     public static void givePlayerExchangeRule(Player player, ExchangeRule rule) {
@@ -137,7 +139,10 @@ public final class Utilities {
         if (Strings.isNullOrEmpty(raw)) {
             return false;
         }
-        if (raw.startsWith("§i§&§&§&§r&i§t§e§m§&§&§&§r§") || raw.startsWith("§o§&§&§&§r&i§t§e§m§&§&§&§r§") || raw.startsWith("�i�&�&�&�r�i�t�e�m�&�&�&�r�") || raw.startsWith("�o�&�&�&�r�i�t�e�m�&�&�&�r�")) {
+        if (raw.startsWith("§i§&§&§&§r&i§t§e§m§&§&§&§r§") ||
+                raw.startsWith("§o§&§&§&§r&i§t§e§m§&§&§&§r§") ||
+                raw.startsWith("�i�&�&�&�r�i�t�e�m�&�&�&�r�") ||
+                raw.startsWith("�o�&�&�&�r�i�t�e�m�&�&�&�r�")) {
             return true;
         }
         return false;
@@ -158,7 +163,10 @@ public final class Utilities {
         }
         ExchangeRule rule = new ExchangeRule();
         // (0) Exchange Direction
-        rule.setType("i".equals(data[0]) ? ExchangeRule.Type.INPUT : "o".equals(data[0]) ? ExchangeRule.Type.OUTPUT : null);
+        rule.setType(
+                "i".equals(data[0]) ? ExchangeRule.Type.INPUT :
+                "o".equals(data[0]) ? ExchangeRule.Type.OUTPUT :
+                null);
         // (1) Exchange Type
         if (!data[1].equals("item")) {
             return null;
@@ -178,7 +186,8 @@ public final class Utilities {
                     stream(data[5].split(ExchangeRule.SECONDARY_SPACER)).
                     filter((str) -> !Strings.isNullOrEmpty(str)).
                     map(str -> str.split(ExchangeRule.TERTIARY_SPACER)).
-                    collect(Collectors.toMap((str) -> EnchantAPI.getEnchantment(str[0]), (str) -> Integer.parseInt(str[1]))));
+                    collect(Collectors.toMap((str) ->
+                            EnchantAPI.getEnchantment(str[0]), (str) -> Integer.parseInt(str[1]))));
             // (6) Excluded Enchantments
             rule.setExcludedEnchants(Arrays.
                     stream(data[6].split(ExchangeRule.SECONDARY_SPACER)).
@@ -257,7 +266,7 @@ public final class Utilities {
             // Check that host block isn't a shop compatible block
             Block sc_buttonhost = shopChest.getRelative(sc_behind);
             // Loop through each cardinal direciton
-            for (BlockFace hostface : BlockUtility.cardinalFaces) {
+            for (BlockFace hostface : BlockAPI.ALL_SIDES) {
                 // Skip if direction is where the shopchest is
                 if (hostface == sc_facing) {
                     continue;

@@ -51,11 +51,12 @@ public class ItemExchangePlugin extends ACivMod {
         registerEvent(new ItemExchangeListener());
         // Load Commands
         commands = new BukkitCommandManager(this);
-        commands.getCommandCompletions().registerAsyncCompletion("materials", (context) -> Arrays.stream(Material.values()).
-                filter(MaterialAPI::isValidItemMaterial).
-                map(Enum::name).
-                filter((name) -> TextUtil.startsWith(name, context.getInput())).
-                collect(Collectors.toCollection(ArrayList::new)));
+        commands.getCommandCompletions().registerAsyncCompletion("materials", (context) ->
+                Arrays.stream(Material.values()).
+                        filter(MaterialAPI::isValidItemMaterial).
+                        map(Enum::name).
+                        filter((name) -> TextUtil.startsWith(name, context.getInput())).
+                        collect(Collectors.toCollection(ArrayList::new)));
         commands.getCommandCompletions().registerAsyncCompletion("types", (c) -> Arrays.asList("input", "output"));
         commands.registerCommand(CreateCommand.INSTANCE);
         commands.registerCommand(SetCommand.INSTANCE);
