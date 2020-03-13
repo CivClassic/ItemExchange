@@ -14,7 +14,6 @@ import com.untamedears.itemexchange.utility.Utilities;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
@@ -112,19 +111,16 @@ public final class ExchangeRule extends ExchangeData {
         // If not the same material, return false
         Material material = getMaterial();
         if (!Objects.equals(material, item.getType())) {
-            Bukkit.getLogger().info("Not the same material.");
             return false;
         }
         // If not the same durability, return false
         short durability = getDurability();
         if (item.getDurability() < 0) {
-            Bukkit.getLogger().info("Not enough durability");
             return false;
         }
         if (MaterialAPI.hasDurability(material)) {
             if (durability == USED) {
                 if (item.getDurability() == 0) {
-                    Bukkit.getLogger().info("Not used - durability check");
                     return false;
                 }
             }
@@ -132,47 +128,30 @@ public final class ExchangeRule extends ExchangeData {
             }
             else {
                 if (item.getDurability() != durability) {
-                    Bukkit.getLogger().info("durability doesn't match");
                     return false;
                 }
             }
         }
         // If the item has no amount, return false
         if (item.getAmount() <= 0) {
-            Bukkit.getLogger().info("Not enough amount");
             return false;
         }
         // Check meta stuff
         boolean[] conforms = { false };
         ItemAPI.handleItemMeta(item, (meta) -> {
-            Map<Enchantment, Integer> mustEnchants = getRequiredEnchants();
+            Map<Enchantment, Integer> ruleEnchants = getRequiredEnchants();
             Map<Enchantment, Integer> metaEnchants = meta.getEnchants();
-            if (metaEnchants.size() < mustEnchants.size()) {
-                Bukkit.getLogger().info("req enchants too small");
+            if (!Utilities.conformsRequiresEnchants(ruleEnchants, metaEnchants)) {
                 return false;
-            }
-            for (Map.Entry<Enchantment, Integer> entry : mustEnchants.entrySet()) {
-                if (!metaEnchants.containsKey(entry.getKey())) {
-                    Bukkit.getLogger().info("Not contain req enchant");
-                    return false;
-                }
-                if (entry.getValue() != ExchangeRule.ANY) {
-                    if (!metaEnchants.get(entry.getKey()).equals(entry.getValue())) {
-                        Bukkit.getLogger().info("Not the same req enchant level");
-                        return false;
-                    }
-                }
             }
             Set<Enchantment> exclEnchants = getExcludedEnchants();
             if (!exclEnchants.isEmpty()) {
                 if (!Collections.disjoint(metaEnchants.keySet(), exclEnchants)) {
-                    Bukkit.getLogger().info("has excluded enchants");
                     return false;
                 }
             }
             if (!isIgnoringDisplayName()) {
                 if (!Objects.equals(meta.getDisplayName(), getDisplayName())) {
-                    Bukkit.getLogger().info("display name no match");
                     return false;
                 }
             }
@@ -183,7 +162,6 @@ public final class ExchangeRule extends ExchangeData {
             }
             for (int i = 0; i < mustLore.size(); i++) {
                 if (!Objects.equals(metaLore.get(i), mustLore.get(i))) {
-                    Bukkit.getLogger().info("lore no match");
                     return false;
                 }
             }

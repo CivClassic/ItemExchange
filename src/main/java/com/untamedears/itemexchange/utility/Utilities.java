@@ -20,6 +20,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Chest;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.DoubleChestInventory;
 import org.bukkit.inventory.Inventory;
@@ -273,6 +274,31 @@ public final class Utilities {
             }
         }
         return false;
+    }
+
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
+    public static boolean conformsRequiresEnchants(Map<Enchantment, Integer> ruleEnchants,
+                                                   Map<Enchantment, Integer> metaEnchants) {
+        if (ruleEnchants == metaEnchants) {
+            return true;
+        }
+        if (ruleEnchants == null || metaEnchants == null) {
+            return false;
+        }
+        if (metaEnchants.size() < ruleEnchants.size()) {
+            return false;
+        }
+        for (Map.Entry<Enchantment, Integer> entry : ruleEnchants.entrySet()) {
+            if (!metaEnchants.containsKey(entry.getKey())) {
+                return false;
+            }
+            if (entry.getValue() != ExchangeRule.ANY) {
+                if (!Objects.equals(metaEnchants.get(entry.getKey()), entry.getValue())) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
 }

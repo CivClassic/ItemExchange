@@ -2,6 +2,7 @@ package com.untamedears.itemexchange.rules.additional;
 
 import com.untamedears.itemexchange.rules.ExchangeData;
 import com.untamedears.itemexchange.rules.ExchangeRule;
+import com.untamedears.itemexchange.utility.Utilities;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -36,20 +37,10 @@ public final class EnchantStorageAdditional extends ExchangeData {
             if (meta.hasStoredEnchants() != hasEnchants()) {
                 return false;
             }
-            Map<Enchantment, Integer> heldEnchants = getEnchants();
+            Map<Enchantment, Integer> ruleEnchants = getEnchants();
             Map<Enchantment, Integer> metaEnchants = meta.getStoredEnchants();
-            if (metaEnchants.size() < heldEnchants.size()) {
+            if (!Utilities.conformsRequiresEnchants(ruleEnchants, metaEnchants)) {
                 return false;
-            }
-            for (Map.Entry<Enchantment, Integer> entry : heldEnchants.entrySet()) {
-                if (!metaEnchants.containsKey(entry.getKey())) {
-                    return false;
-                }
-                if (entry.getValue() != ExchangeRule.ANY) {
-                    if (!metaEnchants.get(entry.getKey()).equals(entry.getValue())) {
-                        return false;
-                    }
-                }
             }
             conforms[0] = true;
             return false;
