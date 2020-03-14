@@ -187,9 +187,19 @@ public final class ExchangeRule extends ExchangeData {
      *              of the details is set to the item's lore.
      */
     private String getRuleTitle() {
-        return ChatColor.YELLOW +
-                (getType() == Type.INPUT ? "Input" : getType() == Type.OUTPUT ? "Output" : "Broken") + ": " +
-                ChatColor.WHITE + getAmount() + " " + getListing();
+        String title = "" + ChatColor.YELLOW;
+        switch (getType()) {
+            case INPUT:
+                title += "Input";
+                break;
+            case OUTPUT:
+                title += "Output";
+                break;
+            default:
+                title += "Broken";
+                break;
+        }
+        return title + ChatColor.WHITE + getAmount() + " " + getListing();
     }
 
     private List<String> getRuleDetails() {
@@ -287,7 +297,13 @@ public final class ExchangeRule extends ExchangeData {
             if (!Strings.isNullOrEmpty(niceName)) {
                 return niceName;
             }
-            return material + (discriminator ? ":" + durability : "");
+            niceName = material + (discriminator ? ":" + durability : "");
+            String displayName = getDisplayName();
+            if (!Strings.isNullOrEmpty(displayName)) {
+                niceName += " " + ChatColor.WHITE + ChatColor.ITALIC + "\"" +
+                        displayName +  ChatColor.WHITE + ChatColor.ITALIC + "\"";
+            }
+            return niceName;
         }
         return listing;
     }
@@ -380,7 +396,7 @@ public final class ExchangeRule extends ExchangeData {
 
     public void setIgnoringDisplayName(boolean ignoringDisplayName) {
         if (ignoringDisplayName) {
-            this.nbt.setBoolean("ignoringDisplayName", ignoringDisplayName);
+            this.nbt.setBoolean("ignoringDisplayName", true);
         }
         else {
             this.nbt.remove("ignoringDisplayName");
@@ -409,12 +425,7 @@ public final class ExchangeRule extends ExchangeData {
     }
 
     public NBTCompound getExtra() {
-        try {
-            return this.nbt.getCompound("extra").clone();
-        }
-        catch (CloneNotSupportedException ignored) {
-            return new NBTCompound();
-        }
+        return this.nbt.getCompound("extra");
     }
 
     public void setExtra(NBTCompound extra) {
