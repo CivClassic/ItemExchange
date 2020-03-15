@@ -11,9 +11,7 @@ public final class TradeRule extends BaseRule {
     private ExchangeRule input;
     private ExchangeRule output;
 
-    public TradeRule() {
-    }
-
+    @Override
     protected void onLock() {
         if (this.input != null) {
             this.input.lock();

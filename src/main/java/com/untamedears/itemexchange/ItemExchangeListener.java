@@ -165,11 +165,9 @@ public class ItemExchangeListener implements Listener {
         if (otherChestBlock != null) {
             Utilities.successfulTransactionButton(otherChestBlock);
         }
-
         trade.lock();
         Bukkit.getServer().getPluginManager().callEvent(new IETransactionEvent(player, inventory, trade,
                 inputItems, outputItems));
-
         if (trade.hasOutput()) {
             player.sendMessage(ChatColor.GREEN + "Successful exchange!");
         }
