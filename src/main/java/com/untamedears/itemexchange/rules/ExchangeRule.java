@@ -200,7 +200,7 @@ public final class ExchangeRule extends ExchangeData {
                 title += "Broken";
                 break;
         }
-        return title + ChatColor.WHITE + getAmount() + " " + getListing();
+        return title + " " + ChatColor.WHITE + getAmount() + " " + getListing();
     }
 
     private List<String> getRuleDetails() {
@@ -326,7 +326,7 @@ public final class ExchangeRule extends ExchangeData {
 
     public void setMaterial(Material material) {
         checkLocked();
-        this.nbt.setString("material", chain(() -> material.name()));
+        this.nbt.setString("material", chain(material::name));
     }
 
     public short getDurability() {
@@ -471,7 +471,7 @@ public final class ExchangeRule extends ExchangeData {
         }
         int requiredAmount = getAmount();
         for (ItemStack item : inventory.getContents()) {
-            if (requiredAmount < 0) {
+            if (requiredAmount <= 0) {
                 break;
             }
             if (!ItemAPI.isValidItem(item)) {
@@ -481,7 +481,7 @@ public final class ExchangeRule extends ExchangeData {
                 continue;
             }
             if (item.getAmount() <= requiredAmount) {
-                stock.add(item);
+                stock.add(item.clone());
                 requiredAmount -= item.getAmount();
             }
             else {

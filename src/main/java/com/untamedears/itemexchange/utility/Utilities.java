@@ -46,7 +46,7 @@ public final class Utilities {
 
     public static void givePlayerExchangeRule(Player player, ExchangeRule rule) {
         RuntimeException error = new InvalidCommandArgument("Could not create that rule.");
-        Inventory inventory = NullCoalescing.chain(() -> player.getInventory());
+        Inventory inventory = NullCoalescing.chain(player::getInventory);
         if (inventory == null || rule == null) {
             throw error;
         }
@@ -264,6 +264,7 @@ public final class Utilities {
     }
 
     @SafeVarargs
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public static <T> boolean contains(T value, T... array) {
         if (array == null || array.length < 1) {
             return false;
