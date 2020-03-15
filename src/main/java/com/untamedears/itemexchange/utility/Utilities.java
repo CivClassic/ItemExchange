@@ -18,13 +18,14 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.block.BlockState;
 import org.bukkit.block.Chest;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.DoubleChestInventory;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.material.Button;
+import org.bukkit.material.DirectionalContainer;
 import vg.civcraft.mc.citadel.Citadel;
 import vg.civcraft.mc.citadel.reinforcement.PlayerReinforcement;
 import vg.civcraft.mc.civmodcore.api.BlockAPI;
@@ -209,57 +210,63 @@ public final class Utilities {
         return rule;
     }
 
-    public static Block getOtherDoubleChestBlock(final Block chest) {
-        BlockState c_state = chest.getState();
-        // If block is not a double chest, then do nothing
-        if (!(c_state instanceof Chest)) {
+    public static Block getOtherDoubleChestBlock(Block chest) {
+        DoubleChestInventory inventory = NullCoalescing.chain(() ->
+                (DoubleChestInventory) ((Chest) chest.getState()).getInventory());
+        if (inventory == null) {
             return null;
         }
-        // Otherwise get the locations of both sides
-        Inventory c_inventory = ((Chest) c_state).getInventory();
-        if (!(c_inventory instanceof DoubleChestInventory)) {
-            return null;
-        }
-        DoubleChestInventory dc_invectory = (DoubleChestInventory) c_inventory;
-        Location dc_l_location = dc_invectory.getLeftSide().getLocation();
-        Location dc_r_location = dc_invectory.getRightSide().getLocation();
-        // If LeftSide has the same location as the original chest, use RightSize
-        if (chest.getLocation().equals(dc_l_location)) {
-            return dc_r_location.getBlock();
+        Location leftSide = inventory.getLeftSide().getLocation();
+        Location rightSide = inventory.getRightSide().getLocation();
+        if (Objects.equals(chest.getLocation(), leftSide)) {
+            return rightSide.getBlock();
         }
         else {
-            return dc_l_location.getBlock();
+            return leftSide.getBlock();
         }
     }
 
-    public static void successfulTransactionButton(Block shopChest) {
-        Material sc_material = shopChest.getType();
-        if (sc_material == Material.CHEST || sc_material == Material.TRAPPED_CHEST) {
-            // Get the block behind the shopChest
-            BlockFace sc_facing = BlockUtility.getFacingDirection(shopChest);
-            BlockFace sc_behind = sc_facing.getOppositeFace();
-            // Check that host block isn't a shop compatible block
-            Block sc_buttonhost = shopChest.getRelative(sc_behind);
-            // Loop through each cardinal direciton
-            for (BlockFace hostface : BlockAPI.ALL_SIDES) {
-                // Skip if direction is where the shopchest is
-                if (hostface == sc_facing) {
-                    continue;
-                }
-                // Otherwise check if block is a button, if not then skip
-                Block bb_block = sc_buttonhost.getRelative(hostface);
-                Material bb_material = bb_block.getType();
-                if (!(bb_material == Material.STONE_BUTTON || bb_material == Material.WOOD_BUTTON)) {
-                    continue;
-                }
-                // Check if the button is attached to the face, otherwise skip
-                BlockFace bb_facing = BlockUtility.getAttachedDirection(bb_block);
-                if (!(bb_facing == hostface)) {
-                    continue;
-                }
-                // Otherwise power the button
-                BlockUtility.powerBlock(bb_block, 30);
+    /**
+     *
+     *
+     */
+    @SuppressWarnings("deprecation")
+    public static void successfulTransactionButton(Block block) {
+        if (block == null) {
+            throw new IllegalArgumentException();
+        }
+        if (!Utilities.contains(block.getType(), Material.CHEST, Material.TRAPPED_CHEST)) {
+            return;
+        }
+        BlockFace backFace = NullCoalescing.chain(() ->
+                ((DirectionalContainer) block.getState().getData()).getFacing().getOppositeFace());
+        if (backFace == null) {
+            return;
+        }
+        Block behindShop = block.getRelative(backFace);
+        if (behindShop == null || !behindShop.getType().isSolid()) {
+            return;
+        }
+        for (BlockFace face : BlockAPI.ALL_SIDES) {
+            if (face == backFace.getOppositeFace()) {
+                continue;
             }
+            Block buttonBlock = behindShop.getRelative(face);
+            if (buttonBlock == null) {
+                continue;
+            }
+            Button button = NullCoalescing.chain(() -> (Button) buttonBlock.getState().getData());
+            if (button == null || button.getAttachedFace() != face.getOppositeFace()) {
+                continue;
+            }
+            button.setPowered(true);
+            buttonBlock.setData(button.getData());
+            buttonBlock.getState().update();
+            Bukkit.getScheduler().scheduleSyncDelayedTask(ItemExchangePlugin.getInstance(), () -> {
+                button.setPowered(false);
+                buttonBlock.setData(button.getData());
+                buttonBlock.getState().update();
+            }, 30L);
         }
     }
 
