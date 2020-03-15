@@ -1,4 +1,4 @@
-package com.untamedears.itemexchange.rules;
+package com.untamedears.itemexchange.rules.interfaces;
 
 import java.util.List;
 import org.bukkit.inventory.ItemStack;
@@ -9,7 +9,7 @@ import vg.civcraft.mc.civmodcore.serialization.NBTSerializationException;
 /**
  * This class forms the basis of all exchange data.
  */
-public abstract class ExchangeData implements NBTSerializable {
+public abstract class ExchangeData extends BaseRule implements NBTSerializable {
 
     protected final NBTCompound nbt = new NBTCompound();
 
@@ -50,6 +50,7 @@ public abstract class ExchangeData implements NBTSerializable {
 
     @Override
     public final void deserialize(NBTCompound nbt) throws NBTSerializationException {
+        checkLocked();
         this.nbt.adopt(nbt);
     }
 
@@ -57,7 +58,12 @@ public abstract class ExchangeData implements NBTSerializable {
      * @return Returns the base NBT data held by this exchange data.
      */
     public final NBTCompound getNBT() {
-        return this.nbt;
+        try {
+            return this.nbt.clone();
+        }
+        catch (CloneNotSupportedException ignored) {
+            return new NBTCompound();
+        }
     }
 
 }

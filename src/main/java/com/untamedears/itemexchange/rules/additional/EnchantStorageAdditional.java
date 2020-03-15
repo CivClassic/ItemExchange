@@ -1,6 +1,6 @@
 package com.untamedears.itemexchange.rules.additional;
 
-import com.untamedears.itemexchange.rules.ExchangeData;
+import com.untamedears.itemexchange.rules.interfaces.ExchangeData;
 import com.untamedears.itemexchange.rules.ExchangeRule;
 import com.untamedears.itemexchange.utility.Utilities;
 import java.util.Arrays;

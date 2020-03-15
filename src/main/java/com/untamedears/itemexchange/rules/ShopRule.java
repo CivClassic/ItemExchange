@@ -62,7 +62,7 @@ public final class ShopRule {
         return getCurrentTrade();
     }
 
-    public void messagePlayer(Player player) {
+    public void presentShopToPlayer(Player player) {
         TradeRule trade = getCurrentTrade();
         if (trade == null) {
             throw new NullPointerException("Could not message player about trade... this shouldn't happen.");
@@ -81,7 +81,7 @@ public final class ShopRule {
         }
     }
 
-    public static ShopRule getItemExchange(Inventory inventory) {
+    public static ShopRule getShopFromInventory(Inventory inventory) {
         if (!InventoryAPI.isValidInventory(inventory)) {
             return null;
         }

@@ -1,16 +1,26 @@
 package com.untamedears.itemexchange.rules;
 
 import com.untamedears.itemexchange.rules.ExchangeRule.Type;
+import com.untamedears.itemexchange.rules.interfaces.BaseRule;
 
 /**
  * This class represents a specific trade within a shop, an input and output pair, or a donation.
  */
-public final class TradeRule {
+public final class TradeRule extends BaseRule {
 
     private ExchangeRule input;
     private ExchangeRule output;
 
     public TradeRule() {
+    }
+
+    protected void onLock() {
+        if (this.input != null) {
+            this.input.lock();
+        }
+        if (this.output != null) {
+            this.output.lock();
+        }
     }
 
     /**
@@ -54,6 +64,7 @@ public final class TradeRule {
      * @param input The input rule to set.
      */
     public void setInput(ExchangeRule input) {
+        checkLocked();
         this.input = input;
     }
 
@@ -81,6 +92,7 @@ public final class TradeRule {
      * @param output The output rule to set.
      */
     public void setOutput(ExchangeRule output) {
+        checkLocked();
         this.output = output;
     }
 

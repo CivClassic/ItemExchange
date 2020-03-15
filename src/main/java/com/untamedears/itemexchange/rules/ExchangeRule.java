@@ -6,6 +6,7 @@ import com.untamedears.itemexchange.rules.additional.BookAdditional;
 import com.untamedears.itemexchange.rules.additional.EnchantStorageAdditional;
 import com.untamedears.itemexchange.rules.additional.PotionAdditional;
 import com.untamedears.itemexchange.rules.additional.RepairAdditional;
+import com.untamedears.itemexchange.rules.interfaces.ExchangeData;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -266,6 +267,7 @@ public final class ExchangeRule extends ExchangeData {
     }
 
     public void setType(Type type) {
+        checkLocked();
         if (type == null) {
             this.nbt.remove("type");
         }
@@ -275,6 +277,7 @@ public final class ExchangeRule extends ExchangeData {
     }
 
     public void switchIO() {
+        checkLocked();
         switch (getType()) {
             case INPUT:
                 setType(Type.OUTPUT);
@@ -309,6 +312,7 @@ public final class ExchangeRule extends ExchangeData {
     }
 
     public void setListing(String listing) {
+        checkLocked();
         this.nbt.setString("listing", listing);
     }
 
@@ -321,6 +325,7 @@ public final class ExchangeRule extends ExchangeData {
     }
 
     public void setMaterial(Material material) {
+        checkLocked();
         this.nbt.setString("material", chain(() -> material.name()));
     }
 
@@ -329,6 +334,7 @@ public final class ExchangeRule extends ExchangeData {
     }
 
     public void setDurability(short durability) {
+        checkLocked();
         if (durability != 0) {
             this.nbt.setShort("durability", durability);
         }
@@ -342,6 +348,7 @@ public final class ExchangeRule extends ExchangeData {
     }
 
     public void setAmount(int amount) {
+        checkLocked();
         this.nbt.setInteger("amount", amount);
     }
 
@@ -354,6 +361,7 @@ public final class ExchangeRule extends ExchangeData {
     }
 
     public void setRequiredEnchants(Map<Enchantment, Integer> requiredEnchants) {
+        checkLocked();
         this.nbt.setCompoundArray("requiredEnchants", chain(() -> requiredEnchants.entrySet().stream().
                 map(entry -> new NBTCompound() {{
                     setString("enchant", chain(() -> entry.getKey().getName()));
@@ -369,6 +377,7 @@ public final class ExchangeRule extends ExchangeData {
     }
 
     public void setExcludedEnchants(Set<Enchantment> excludedEnchants) {
+        checkLocked();
         this.nbt.setStringArray("excludedEnchants", chain(() -> excludedEnchants.stream().
                 map(entry -> chain(entry::getName)).
                 toArray(String[]::new)));
@@ -379,6 +388,7 @@ public final class ExchangeRule extends ExchangeData {
     }
 
     public void setAllowingUnlistedEnchants(boolean allowingUnlistedEnchants) {
+        checkLocked();
         this.nbt.setBoolean("allowingUnlistedEnchants", allowingUnlistedEnchants);
     }
 
@@ -387,6 +397,7 @@ public final class ExchangeRule extends ExchangeData {
     }
 
     public void setDisplayName(String displayName) {
+        checkLocked();
         this.nbt.setString("displayName", displayName);
     }
 
@@ -395,6 +406,7 @@ public final class ExchangeRule extends ExchangeData {
     }
 
     public void setIgnoringDisplayName(boolean ignoringDisplayName) {
+        checkLocked();
         if (ignoringDisplayName) {
             this.nbt.setBoolean("ignoringDisplayName", true);
         }
@@ -408,6 +420,7 @@ public final class ExchangeRule extends ExchangeData {
     }
 
     public void setLore(List<String> lore) {
+        checkLocked();
         this.nbt.setStringArray("lore", lore == null ? null : lore.toArray(new String[0]));
     }
 
@@ -416,6 +429,7 @@ public final class ExchangeRule extends ExchangeData {
     }
 
     public void setGroup(Group group) {
+        checkLocked();
         if (group == null) {
             this.nbt.remove("group");
         }
@@ -429,6 +443,7 @@ public final class ExchangeRule extends ExchangeData {
     }
 
     public void setExtra(NBTCompound extra) {
+        checkLocked();
         this.nbt.setCompound("extra", extra);
     }
 
@@ -449,10 +464,10 @@ public final class ExchangeRule extends ExchangeData {
         return Math.max(amount / getAmount(), 0);
     }
 
-    public List<ItemStack> getStock(Inventory inventory) {
+    public ItemStack[] getStock(Inventory inventory) {
         ArrayList<ItemStack> stock = new ArrayList<>();
         if (!InventoryAPI.isValidInventory(inventory)) {
-            return stock;
+            return new ItemStack[0];
         }
         int requiredAmount = getAmount();
         for (ItemStack item : inventory.getContents()) {
@@ -476,7 +491,7 @@ public final class ExchangeRule extends ExchangeData {
                 requiredAmount = 0;
             }
         }
-        return stock;
+        return stock.toArray(new ItemStack[0]);
     }
 
     public ItemStack toItem() {

@@ -2,6 +2,7 @@ package com.untamedears.itemexchange.rules;
 
 import com.google.common.base.Strings;
 import com.untamedears.itemexchange.ItemExchangePlugin;
+import com.untamedears.itemexchange.rules.interfaces.ExchangeData;
 import com.untamedears.itemexchange.utility.Utilities;
 import java.util.ArrayList;
 import java.util.Arrays;

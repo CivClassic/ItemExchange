@@ -1,7 +1,7 @@
 package com.untamedears.itemexchange.rules.additional;
 
 import com.google.common.base.Strings;
-import com.untamedears.itemexchange.rules.ExchangeData;
+import com.untamedears.itemexchange.rules.interfaces.ExchangeData;
 import com.untamedears.itemexchange.rules.ExchangeRule;
 import java.util.ArrayList;
 import java.util.Arrays;

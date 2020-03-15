@@ -1,5 +1,6 @@
 package com.untamedears.itemexchange;
 
+import com.untamedears.itemexchange.events.IETransactionEvent;
 import com.untamedears.itemexchange.rules.BulkExchangeRule;
 import com.untamedears.itemexchange.rules.ExchangeRule;
 import com.untamedears.itemexchange.rules.ShopRule;
@@ -72,7 +73,7 @@ public class ItemExchangeListener implements Listener {
         // Attempt to create parse a shop from the inventory
         Inventory inventory = NullCoalescing.chain(() ->
                 ((InventoryHolder) event.getClickedBlock().getState()).getInventory());
-        ShopRule shop = ShopRule.getItemExchange(inventory);
+        ShopRule shop = ShopRule.getShopFromInventory(inventory);
         if (shop == null) {
             return;
         }
@@ -99,9 +100,11 @@ public class ItemExchangeListener implements Listener {
             this.ruleIndex.remove(player);
             return;
         }
+        ExchangeRule inputRule = trade.getInput();
+        ExchangeRule outputRule = trade.getOutput();
         // Check if the input is limited to a group, and if so whether the viewer
         // has permission to purchase from that group.
-        Group group = trade.getInput().getGroup();
+        Group group = inputRule.getGroup();
         if (group != null) {
             if (!ItemExchangePlugin.PURCHASE_PERMISSION.hasAccess(group, player)) {
                 justBrowsing = true;
@@ -109,7 +112,7 @@ public class ItemExchangeListener implements Listener {
         }
         // If the player's hand is empty or holding the wrong item, just scroll
         // through the catalogue.
-        if (justBrowsing || !trade.getInput().conforms(event.getItem())) {
+        if (justBrowsing || !inputRule.conforms(event.getItem())) {
             if (shouldCycle) {
                 trade = shop.cycleTrades(!player.isSneaking());
                 if (trade == null) {
@@ -118,35 +121,38 @@ public class ItemExchangeListener implements Listener {
                 }
                 this.ruleIndex.put(player, shop.getCurrentTradeIndex());
             }
-            shop.messagePlayer(player);
+            shop.presentShopToPlayer(player);
             return;
         }
         // Check that the buyer has enough of the inputs
-        List<ItemStack> inputItems = trade.getInput().getStock(player.getInventory());
-        if (inputItems.isEmpty()) {
+        ItemStack[] inputItems = inputRule.getStock(player.getInventory());
+        if (inputItems.length < 1) {
             player.sendMessage(ChatColor.RED + "You don't have enough of the input.");
             return;
         }
-        // Check that the shop has enough of the outputs
-        List<ItemStack> outputItems = trade.hasOutput() ? trade.getOutput().getStock(inventory) : null;
-        if (outputItems != null && outputItems.isEmpty()) {
-            player.sendMessage(ChatColor.RED + "Shop does not have enough in stock.");
-            return;
+        // Check that the shop has enough of the outputs if needed
+        ItemStack[] outputItems = new ItemStack[0];
+        if (trade.hasOutput()) {
+            outputItems = outputRule.getStock(inventory);
+            if (outputItems.length < 1) {
+                player.sendMessage(ChatColor.RED + "Shop does not have enough in stock.");
+                return;
+            }
         }
         // Attempt to transfer the items between the shop and the buyer
         boolean successfulTransfer;
-        if (outputItems == null) {
-            successfulTransfer = InventoryAPI.safelyTransactBetweenInventories(
-                    player.getInventory(),
-                    inputItems.toArray(new ItemStack[0]),
-                    inventory);
-        }
-        else {
+        if (trade.hasOutput()) {
             successfulTransfer = InventoryAPI.safelyTradeBetweenInventories(
                     player.getInventory(),
-                    inputItems.toArray(new ItemStack[0]),
+                    inputItems,
                     inventory,
-                    outputItems.toArray(new ItemStack[0]));
+                    outputItems);
+        }
+        else {
+            successfulTransfer = InventoryAPI.safelyTransactBetweenInventories(
+                    player.getInventory(),
+                    inputItems,
+                    inventory);
         }
         if (!successfulTransfer) {
             player.sendMessage(ChatColor.RED + "Could not complete that transaction!");
@@ -155,17 +161,20 @@ public class ItemExchangeListener implements Listener {
         // Power buttons button directly behind *this* chest
         Block shopChest = event.getClickedBlock();
         Utilities.successfulTransactionButton(event.getClickedBlock());
-        // Check if *this* chest if double chest, if so, call for that too
         Block otherChestBlock = Utilities.getOtherDoubleChestBlock(shopChest);
         if (otherChestBlock != null) {
             Utilities.successfulTransactionButton(otherChestBlock);
         }
 
-        if (outputItems == null) {
-            player.sendMessage(ChatColor.GREEN + "Successful donation!");
+        trade.lock();
+        Bukkit.getServer().getPluginManager().callEvent(new IETransactionEvent(player, inventory, trade,
+                inputItems, outputItems));
+
+        if (trade.hasOutput()) {
+            player.sendMessage(ChatColor.GREEN + "Successful exchange!");
         }
         else {
-            player.sendMessage(ChatColor.GREEN + "Successful exchange!");
+            player.sendMessage(ChatColor.GREEN + "Successful donation!");
         }
     }
 
