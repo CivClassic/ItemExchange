@@ -39,6 +39,7 @@ import vg.civcraft.mc.namelayer.group.Group;
 public class ItemExchangeListener implements Listener {
 
     private static final long TIME_BETWEEN_CLICKS = 200L;
+    private static final long TIME_BEFORE_TIMEOUT = 10000L;
 
     private final Map<Player, Long> playerInteractionCooldowns = new Hashtable<>();
     private final Map<Player, Inventory> shopRecord = new HashMap<>();
@@ -88,6 +89,11 @@ public class ItemExchangeListener implements Listener {
             this.ruleIndex.put(player, 0);
             justBrowsing = true;
             shouldCycle = false;
+        }
+        // If the player hasn't interacted with the shop for a while, then don't
+        // insta-purchase on the next interaction.
+        if (now - pre > TIME_BEFORE_TIMEOUT) {
+            justBrowsing = true;
         }
         // If the player is holding nothing, just browse
         if (!ItemAPI.isValidItem(event.getItem())) {
