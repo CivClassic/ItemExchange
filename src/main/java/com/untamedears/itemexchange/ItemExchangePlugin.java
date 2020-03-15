@@ -114,6 +114,9 @@ public class ItemExchangePlugin extends ACivMod {
         // Unload Commands
         commands.unregisterCommands();
         commands = null;
+        // Unload Configs
+        SHOP_BLOCKS.clear();
+        CAN_ENCHANT.clear();
         // Finalise Disable
         super.onDisable();
         instance = null;
