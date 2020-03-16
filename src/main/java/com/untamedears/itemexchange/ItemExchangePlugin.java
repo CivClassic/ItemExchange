@@ -5,6 +5,10 @@ import com.untamedears.itemexchange.commands.CreateCommand;
 import com.untamedears.itemexchange.commands.SetCommand;
 import com.untamedears.itemexchange.rules.BulkExchangeRule;
 import com.untamedears.itemexchange.rules.ExchangeRule;
+import com.untamedears.itemexchange.rules.additional.BookAdditional;
+import com.untamedears.itemexchange.rules.additional.EnchantStorageAdditional;
+import com.untamedears.itemexchange.rules.additional.PotionAdditional;
+import com.untamedears.itemexchange.rules.additional.RepairAdditional;
 import com.untamedears.itemexchange.utility.Permission;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -63,6 +67,10 @@ public class ItemExchangePlugin extends ACivMod {
         // Register Serializables
         registerSerializable(ExchangeRule.class);
         registerSerializable(BulkExchangeRule.class);
+        registerSerializable(BookAdditional.class);
+        registerSerializable(EnchantStorageAdditional.class);
+        registerSerializable(PotionAdditional.class);
+        registerSerializable(RepairAdditional.class);
         // Parse Config
         SHOP_BLOCKS.clear();
         for (String raw : getConfig().getStringList("supportedBlocks")) {

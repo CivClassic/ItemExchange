@@ -1,16 +1,16 @@
 package com.untamedears.itemexchange.utility;
 
 import com.google.common.base.Strings;
-import org.bukkit.entity.Player;
-import vg.civcraft.mc.civmodcore.util.NullCoalescing;
-import vg.civcraft.mc.namelayer.NameAPI;
-import vg.civcraft.mc.namelayer.group.Group;
-import vg.civcraft.mc.namelayer.permission.PermissionType;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Set;
 import java.util.TreeSet;
+import org.bukkit.entity.Player;
+import vg.civcraft.mc.civmodcore.util.NullCoalescing;
 import static vg.civcraft.mc.namelayer.GroupManager.PlayerType;
+import vg.civcraft.mc.namelayer.NameAPI;
+import vg.civcraft.mc.namelayer.group.Group;
+import vg.civcraft.mc.namelayer.permission.PermissionType;
 
 /**
  * This class is an abstraction of NameLayer's Permission system. This is intended to bring together and bring ease of

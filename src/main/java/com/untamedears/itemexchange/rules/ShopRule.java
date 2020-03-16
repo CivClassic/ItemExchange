@@ -1,5 +1,7 @@
 package com.untamedears.itemexchange.rules;
 
+import com.untamedears.itemexchange.ItemExchangePlugin;
+import static com.untamedears.itemexchange.rules.ExchangeRule.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -9,9 +11,10 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import vg.civcraft.mc.civmodcore.api.InventoryAPI;
 import vg.civcraft.mc.civmodcore.api.ItemAPI;
-import static com.untamedears.itemexchange.rules.ExchangeRule.Type;
 
 public final class ShopRule {
+
+    private final ItemExchangePlugin plugin = ItemExchangePlugin.getInstance();
 
     private Inventory inventory;
     private List<TradeRule> trades = new ArrayList<>();
@@ -65,8 +68,8 @@ public final class ShopRule {
         if (trade == null) {
             throw new NullPointerException("Could not message player about trade... this shouldn't happen.");
         }
-        player.sendMessage(ChatColor.YELLOW + "(" + (this.currentTradeIndex + 1) + "/" + this.trades.size() +
-                ") exchanges present.");
+        player.sendMessage(ChatColor.YELLOW + "(" +
+                (this.currentTradeIndex + 1) + "/" + this.trades.size() + ") exchanges present.");
         for (String line : trade.getInput().getDisplayedInfo()) {
             player.sendMessage(line);
         }
@@ -74,6 +77,7 @@ public final class ShopRule {
             for (String line : trade.getOutput().getDisplayedInfo()) {
                 player.sendMessage(line);
             }
+            this.plugin.debug("[ShopRule] Calculating stock.");
             int stock = trade.getOutput().calculateStock(inventory);
             player.sendMessage(ChatColor.YELLOW + "" + stock + " exchange" + (stock == 1 ? "" : "s") + " available.");
         }

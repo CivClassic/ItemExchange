@@ -12,6 +12,8 @@ import co.aikar.commands.annotation.Syntax;
 import com.google.common.base.Strings;
 import com.untamedears.itemexchange.ItemExchangePlugin;
 import com.untamedears.itemexchange.rules.ExchangeRule;
+import com.untamedears.itemexchange.rules.additional.RepairAdditional;
+import com.untamedears.itemexchange.rules.interfaces.AdditionalData;
 import com.untamedears.itemexchange.utility.Utilities;
 import java.util.Arrays;
 import java.util.Map;
@@ -26,6 +28,7 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import vg.civcraft.mc.civmodcore.api.EnchantAPI;
 import vg.civcraft.mc.civmodcore.api.MaterialAPI;
+import vg.civcraft.mc.civmodcore.util.NullCoalescing;
 import vg.civcraft.mc.civmodcore.util.TextUtil;
 import vg.civcraft.mc.namelayer.GroupManager;
 import vg.civcraft.mc.namelayer.group.Group;
@@ -256,14 +259,14 @@ public class SetCommand extends BaseCommand {
             throw new InvalidCommandArgument("NameLayer is not enabled.");
         }
         ExchangeRule rule = Utilities.ensureHoldingExchangeRule(player);
-        if (rule.getType() != ExchangeRule.Type.INPUT) {
-            throw new InvalidCommandArgument("You can only set that on input rules.");
-        }
         if (Strings.isNullOrEmpty(value)) {
             player.sendMessage(ChatColor.GREEN + "Successfully removed Citadel group.");
             rule.setGroup(null);
         }
         else {
+            if (rule.getType() != ExchangeRule.Type.INPUT) {
+                throw new InvalidCommandArgument("You can only set that on input rules.");
+            }
             Group group = GroupManager.getGroup(value);
             if (!ItemExchangePlugin.ESTABLISH_PERMISSION.hasAccess(group, player)) {
                 throw new InvalidCommandArgument("You must enter a group you have permissions for.");
@@ -280,6 +283,46 @@ public class SetCommand extends BaseCommand {
         ExchangeRule rule = Utilities.ensureHoldingExchangeRule(player);
         player.sendMessage(ChatColor.GREEN + "Type successfully switched.");
         rule.switchIO();
+        Utilities.replaceHoldingExchangeRule(player, rule);
+    }
+
+    @Subcommand("repair|repairlevel")
+    @Description("Sets or resets the exchange's repair level.")
+    @Syntax("[repair level]")
+    public void setRepairLevel(Player player, @Optional String value) {
+        ExchangeRule rule = Utilities.ensureHoldingExchangeRule(player);
+        if (Strings.isNullOrEmpty(value)) {
+            AdditionalData additional = rule.getAdditional();
+            if (additional instanceof RepairAdditional) {
+                rule.setAdditional(null);
+            }
+            player.sendMessage(ChatColor.GREEN + "Successfully removed repair level condition.");
+        }
+        else {
+            if (!MaterialAPI.usesDurability(rule.getMaterial())) {
+                throw new InvalidCommandArgument("Cannot set a repair level for that rule.");
+            }
+            RepairAdditional additional = new RepairAdditional();
+            if (value.startsWith("<")) {
+                int level = NullCoalescing.chain(() -> Integer.parseInt(value.substring(1)), (int) ExchangeRule.ERROR);
+                if (level < 2) {
+                    throw new InvalidCommandArgument("You must enter a valid less than value, e.g: <9");
+                }
+                additional.setRepairCost((level - 2) * -1);
+            }
+            else if (TextUtil.stringEqualsIgnoreCase(value, "NEW") || TextUtil.stringEqualsIgnoreCase(value, "MINT")) {
+                additional.setRepairCost(0);
+            }
+            else {
+                int level = NullCoalescing.chain(() -> Integer.parseInt(value), (int) ExchangeRule.ERROR);
+                if (level < 2) {
+                    throw new InvalidCommandArgument("You must enter a valid value, e.g: 9");
+                }
+                additional.setRepairCost(level - 2);
+            }
+            rule.setAdditional(additional);
+            player.sendMessage(ChatColor.GREEN + "Successfully changed repair level condition.");
+        }
         Utilities.replaceHoldingExchangeRule(player, rule);
     }
 

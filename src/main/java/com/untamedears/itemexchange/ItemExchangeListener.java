@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
@@ -42,8 +43,10 @@ public class ItemExchangeListener implements Listener {
     private static final long TIME_BEFORE_TIMEOUT = 10000L;
 
     private final Map<Player, Long> playerInteractionCooldowns = new Hashtable<>();
-    private final Map<Player, Inventory> shopRecord = new HashMap<>();
+    private final Map<Player, Location> shopRecord = new HashMap<>();
     private final Map<Player, Integer> ruleIndex = new HashMap<>();
+
+    private final ItemExchangePlugin plugin = ItemExchangePlugin.getInstance();
 
     /**
      * Responds when a player interacts with a shop
@@ -64,10 +67,12 @@ public class ItemExchangeListener implements Listener {
         if (!ItemExchangePlugin.SHOP_BLOCKS.contains(event.getClickedBlock().getType())) {
             return;
         }
+        this.plugin.debug("[Shop] Shop Parsing Starting---------");
         // Limit player interactions to once per 200ms
         long now = System.currentTimeMillis();
         long pre = this.playerInteractionCooldowns.getOrDefault(player, 0L);
         if (now - pre < TIME_BETWEEN_CLICKS) {
+            this.plugin.debug("[Shop] Cancelling, interacting too quickly.");
             return;
         }
         this.playerInteractionCooldowns.put(player, now);
@@ -76,36 +81,43 @@ public class ItemExchangeListener implements Listener {
                 ((InventoryHolder) event.getClickedBlock().getState()).getInventory());
         ShopRule shop = ShopRule.getShopFromInventory(inventory);
         if (shop == null) {
+            this.plugin.debug("[Shop] Cancelling, that is not a shop.");
             return;
         }
+        this.plugin.debug("[Shop] Shop successfully parsed.");
         // Check if the player has interacted with this specific shop before
         // If not then switch over to this shop and display its catalogue
         boolean justBrowsing = false;
         boolean shouldCycle = true;
         if (!this.shopRecord.containsKey(player) ||
-                !inventory.equals(this.shopRecord.get(player)) ||
+                !inventory.getLocation().equals(this.shopRecord.get(player)) ||
                 !this.ruleIndex.containsKey(player)) {
-            this.shopRecord.put(player, inventory);
+            this.shopRecord.put(player, inventory.getLocation());
             this.ruleIndex.put(player, 0);
             justBrowsing = true;
             shouldCycle = false;
+            this.plugin.debug("[Shop] Buyer hasn't interacted with this shop before. Browsing.");
         }
         // If the player hasn't interacted with the shop for a while, then don't
         // insta-purchase on the next interaction.
         if (now - pre > TIME_BEFORE_TIMEOUT) {
             justBrowsing = true;
+            this.plugin.debug("[Shop] Interaction timed out. Browsing.");
         }
         // If the player is holding nothing, just browse
         if (!ItemAPI.isValidItem(event.getItem())) {
             justBrowsing = true;
+            this.plugin.debug("[Shop] Buyer is not holding an input item. Browsing.");
         }
         // Attempt to get the trade from the shop
         shop.setCurrentTradeIndex(this.ruleIndex.getOrDefault(player, 0));
         TradeRule trade = shop.getCurrentTrade();
         if (trade == null || !trade.isValid()) {
             this.ruleIndex.remove(player);
+            this.plugin.debug("[Shop] Cancelling, could not find a valid trade.");
             return;
         }
+        this.plugin.debug("[Shop] Valid trade found.");
         ExchangeRule inputRule = trade.getInput();
         ExchangeRule outputRule = trade.getOutput();
         // Check if the input is limited to a group, and if so whether the viewer
@@ -114,6 +126,7 @@ public class ItemExchangeListener implements Listener {
         if (group != null) {
             if (!ItemExchangePlugin.PURCHASE_PERMISSION.hasAccess(group, player)) {
                 justBrowsing = true;
+                this.plugin.debug("[Shop] Buyer cannot purchase from that Group limited trade. Browsing.");
             }
         }
         // If the player's hand is empty or holding the wrong item, just scroll
@@ -122,17 +135,22 @@ public class ItemExchangeListener implements Listener {
             if (shouldCycle) {
                 trade = shop.cycleTrades(!player.isSneaking());
                 if (trade == null) {
+                    this.plugin.debug("[Shop] Cancelling, could not find a valid trade when cycling.");
                     this.ruleIndex.remove(player);
                     return;
                 }
+                this.plugin.debug("[Shop] Catalogue cycled.");
                 this.ruleIndex.put(player, shop.getCurrentTradeIndex());
             }
+            this.plugin.debug("[Shop] Presenting catalogue to buyer.");
             shop.presentShopToPlayer(player);
             return;
         }
+        this.plugin.debug("[Shop] Attempting transaction.");
         // Check that the buyer has enough of the inputs
         ItemStack[] inputItems = inputRule.getStock(player.getInventory());
         if (inputItems.length < 1) {
+            this.plugin.debug("[Shop] Cancelling, buyer doesn't have enough of the input.");
             player.sendMessage(ChatColor.RED + "You don't have enough of the input.");
             return;
         }
@@ -141,6 +159,7 @@ public class ItemExchangeListener implements Listener {
         if (trade.hasOutput()) {
             outputItems = outputRule.getStock(inventory);
             if (outputItems.length < 1) {
+                this.plugin.debug("[Shop] Cancelling, shop doesn't have enough of the output.");
                 player.sendMessage(ChatColor.RED + "Shop does not have enough in stock.");
                 return;
             }
@@ -149,18 +168,14 @@ public class ItemExchangeListener implements Listener {
         boolean successfulTransfer;
         if (trade.hasOutput()) {
             successfulTransfer = InventoryAPI.safelyTradeBetweenInventories(
-                    player.getInventory(),
-                    inputItems,
-                    inventory,
-                    outputItems);
+                    player.getInventory(), inputItems, inventory, outputItems);
         }
         else {
             successfulTransfer = InventoryAPI.safelyTransactBetweenInventories(
-                    player.getInventory(),
-                    inputItems,
-                    inventory);
+                    player.getInventory(), inputItems, inventory);
         }
         if (!successfulTransfer) {
+            this.plugin.debug("[Shop] Could not complete that transaction.");
             player.sendMessage(ChatColor.RED + "Could not complete that transaction!");
             return;
         }
@@ -172,8 +187,8 @@ public class ItemExchangeListener implements Listener {
             Utilities.successfulTransactionButton(otherChestBlock);
         }
         trade.lock();
-        Bukkit.getServer().getPluginManager().callEvent(new IETransactionEvent(player, inventory, trade,
-                inputItems, outputItems));
+        Bukkit.getServer().getPluginManager().callEvent(
+                new IETransactionEvent(player, inventory, trade, inputItems, outputItems));
         if (trade.hasOutput()) {
             player.sendMessage(ChatColor.GREEN + "Successful exchange!");
         }

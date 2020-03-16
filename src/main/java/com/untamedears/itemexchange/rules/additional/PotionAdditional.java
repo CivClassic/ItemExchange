@@ -1,8 +1,8 @@
 package com.untamedears.itemexchange.rules.additional;
 
 import com.google.common.base.Strings;
-import com.untamedears.itemexchange.rules.interfaces.ExchangeData;
 import com.untamedears.itemexchange.rules.ExchangeRule;
+import com.untamedears.itemexchange.rules.interfaces.AdditionalData;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -22,7 +22,7 @@ import vg.civcraft.mc.civmodcore.api.ItemAPI;
 import vg.civcraft.mc.civmodcore.serialization.NBTCompound;
 import vg.civcraft.mc.civmodcore.util.NullCoalescing;
 
-public final class PotionAdditional extends ExchangeData {
+public final class PotionAdditional extends AdditionalData {
 
     @Override
     public boolean isValid() {
@@ -182,14 +182,14 @@ public final class PotionAdditional extends ExchangeData {
         }}).toArray(NBTCompound[]::new));
     }
 
-    public static NBTCompound fromItem(ItemStack item) {
+    public static AdditionalData fromItem(ItemStack item) {
         PotionAdditional additional = new PotionAdditional();
         additional.trace(item);
-        return additional.getNBT();
+        return additional;
     }
 
     @SuppressWarnings("deprecation")
-    public static NBTCompound fromLegacy(String[] parts) {
+    public static AdditionalData fromLegacy(String[] parts) {
         PotionAdditional data = new PotionAdditional();
         List<PotionEffect> effects = new ArrayList<>();
         for (int i = 0; i < parts.length; i++) {
@@ -253,7 +253,7 @@ public final class PotionAdditional extends ExchangeData {
             }
         }
         data.setEffects(effects);
-        return data.getNBT();
+        return data;
     }
 
 }

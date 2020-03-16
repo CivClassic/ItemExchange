@@ -1,7 +1,7 @@
 package com.untamedears.itemexchange.rules.additional;
 
-import com.untamedears.itemexchange.rules.interfaces.ExchangeData;
 import com.untamedears.itemexchange.rules.ExchangeRule;
+import com.untamedears.itemexchange.rules.interfaces.AdditionalData;
 import com.untamedears.itemexchange.utility.Utilities;
 import java.util.Arrays;
 import java.util.Collections;
@@ -20,7 +20,7 @@ import vg.civcraft.mc.civmodcore.serialization.NBTCompound;
 import vg.civcraft.mc.civmodcore.util.NullCoalescing;
 import static vg.civcraft.mc.civmodcore.util.NullCoalescing.chain;
 
-public final class EnchantStorageAdditional extends ExchangeData {
+public final class EnchantStorageAdditional extends AdditionalData {
 
     @Override
     public boolean isValid() {
@@ -44,7 +44,7 @@ public final class EnchantStorageAdditional extends ExchangeData {
             }
             Map<Enchantment, Integer> ruleEnchants = getEnchants();
             Map<Enchantment, Integer> metaEnchants = meta.getStoredEnchants();
-            if (!Utilities.conformsRequiresEnchants(ruleEnchants, metaEnchants)) {
+            if (!Utilities.conformsRequiresEnchants(ruleEnchants, metaEnchants, false)) {
                 return false;
             }
             conforms[0] = true;
@@ -89,13 +89,13 @@ public final class EnchantStorageAdditional extends ExchangeData {
                 toArray(NBTCompound[]::new)));
     }
 
-    public static NBTCompound fromItem(ItemStack item) {
+    public static AdditionalData fromItem(ItemStack item) {
         EnchantStorageAdditional additional = new EnchantStorageAdditional();
         additional.trace(item);
-        return additional.getNBT();
+        return additional;
     }
 
-    public static NBTCompound fromLegacy(String[] parts) {
+    public static AdditionalData fromLegacy(String[] parts) {
         EnchantStorageAdditional additional = new EnchantStorageAdditional();
         additional.setEnchants(Arrays.stream(parts).
                 map((raw) -> raw.split(ExchangeRule.TERTIARY_SPACER)).
@@ -104,7 +104,7 @@ public final class EnchantStorageAdditional extends ExchangeData {
                         NullCoalescing.chain(() -> Integer.parseInt(raw[1]), 0))).
                 filter((pair) -> EnchantAPI.isSafeEnchantment(pair.getValue0(), pair.getValue1())).
                 collect(Collectors.toMap(Pair::getValue0, Pair::getValue1)));
-        return additional.getNBT();
+        return additional;
     }
 
 }

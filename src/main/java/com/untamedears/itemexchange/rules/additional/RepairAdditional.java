@@ -1,22 +1,20 @@
 package com.untamedears.itemexchange.rules.additional;
 
-import com.untamedears.itemexchange.rules.interfaces.ExchangeData;
+import com.untamedears.itemexchange.rules.interfaces.AdditionalData;
 import java.util.Collections;
 import java.util.List;
 import org.bukkit.ChatColor;
 import org.bukkit.inventory.ItemStack;
-import vg.civcraft.mc.civmodcore.api.ItemAPI;
-import vg.civcraft.mc.civmodcore.api.MaterialAPI;
-import vg.civcraft.mc.civmodcore.serialization.NBTCompound;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.Repairable;
 
 /**
  * This additional represents a repair level condition.
  *
  * Positive integers and zero mean that repair level specifically, eg: RepairCost == 15
  * Negative integers mean that that repair level or lower, eg: RepairCost <= 15
- *
  */
-public final class RepairAdditional extends ExchangeData {
+public final class RepairAdditional extends AdditionalData {
 
     @Override
     public boolean isValid() {
@@ -25,23 +23,25 @@ public final class RepairAdditional extends ExchangeData {
 
     @Override
     public void trace(ItemStack item) {
-        if (MaterialAPI.usesDurability(item.getType())) {
-            setRepairCost(ItemAPI.getItemRepairCost(item));
+        ItemMeta meta = item.getItemMeta();
+        if (meta instanceof Repairable) {
+            setRepairCost(((Repairable) meta).getRepairCost());
         }
     }
 
     @Override
     public boolean conforms(ItemStack item) {
-        if (MaterialAPI.usesDurability(item.getType())) {
+        ItemMeta meta = item.getItemMeta();
+        if (!(meta instanceof Repairable)) {
             return false;
         }
         int ruleRepair = getRepairCost();
-        int itemRepair = ItemAPI.getItemRepairCost(item);
+        int itemRepair = ((Repairable) meta).getRepairCost();
         if (ruleRepair >= 0) {
             return itemRepair == ruleRepair;
         }
         else {
-            return itemRepair <= ruleRepair;
+            return itemRepair <= ruleRepair * -1;
         }
     }
 
@@ -49,7 +49,7 @@ public final class RepairAdditional extends ExchangeData {
     public List<String> getDisplayedInfo() {
         int repairCost = getRepairCost();
         if (repairCost == 0) {
-            return Collections.singletonList(ChatColor.GOLD + "Mint condition");
+            return Collections.singletonList(ChatColor.GOLD + "Never repaired");
         }
         else if (repairCost > 0) {
             return Collections.singletonList(ChatColor.GOLD + "Repair level " + (repairCost + 2));
@@ -67,10 +67,10 @@ public final class RepairAdditional extends ExchangeData {
         this.nbt.setInteger("repairLevel", repairLevel);
     }
 
-    public static NBTCompound fromItem(ItemStack item) {
+    public static AdditionalData fromItem(ItemStack item) {
         RepairAdditional additional = new RepairAdditional();
         additional.trace(item);
-        return additional.getNBT();
+        return additional;
     }
 
 }

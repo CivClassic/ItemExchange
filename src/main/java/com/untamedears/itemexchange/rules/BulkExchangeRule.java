@@ -12,6 +12,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import org.bukkit.ChatColor;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import vg.civcraft.mc.civmodcore.api.ItemAPI;
 import vg.civcraft.mc.civmodcore.serialization.NBTCompound;
 import vg.civcraft.mc.civmodcore.serialization.NBTSerializable;
@@ -71,7 +72,7 @@ public final class BulkExchangeRule extends ExchangeData {
     public ItemStack toItem() {
         ItemStack item = NBTCompound.processItem(ItemExchangePlugin.RULE_ITEM.clone(), (nbt) ->
                 nbt.setCompound("BulkExchangeRule", NBTSerialization.serialize(this)));
-        ItemAPI.handleItemMeta(item, (meta) -> {
+        ItemAPI.handleItemMeta(item, (ItemMeta meta) -> {
             meta.setDisplayName(ChatColor.RED + "Bulk Rule Block");
             meta.setLore(Collections.singletonList(
                     "This rule block holds " + getRules().size() + " exchange rule" +

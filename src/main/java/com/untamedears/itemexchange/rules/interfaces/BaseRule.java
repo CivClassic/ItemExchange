@@ -9,7 +9,8 @@ public class BaseRule {
         onLock();
     }
 
-    protected void onLock() { }
+    protected void onLock() {
+    }
 
     protected final void checkLocked() {
         if (this.locked) {

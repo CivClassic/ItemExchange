@@ -1,6 +1,6 @@
 package com.untamedears.itemexchange.rules.additional;
 
-import com.untamedears.itemexchange.rules.interfaces.ExchangeData;
+import com.untamedears.itemexchange.rules.interfaces.AdditionalData;
 import java.util.ArrayList;
 import java.util.List;
 import org.bukkit.ChatColor;
@@ -8,10 +8,9 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.inventory.meta.BookMeta.Generation;
 import vg.civcraft.mc.civmodcore.api.ItemAPI;
-import vg.civcraft.mc.civmodcore.serialization.NBTCompound;
 import vg.civcraft.mc.civmodcore.util.NullCoalescing;
 
-public final class BookAdditional extends ExchangeData {
+public final class BookAdditional extends AdditionalData {
 
     @Override
     public boolean isValid() {
@@ -130,13 +129,13 @@ public final class BookAdditional extends ExchangeData {
         this.nbt.setInteger("bookHash", bookHash);
     }
 
-    public static NBTCompound fromItem(ItemStack item) {
+    public static AdditionalData fromItem(ItemStack item) {
         BookAdditional additional = new BookAdditional();
         additional.trace(item);
-        return additional.getNBT();
+        return additional;
     }
 
-    public static NBTCompound fromLegacy(String[] parts) {
+    public static AdditionalData fromLegacy(String[] parts) {
         BookAdditional additional = new BookAdditional();
         switch (parts.length) {
             case 3: {
@@ -161,7 +160,7 @@ public final class BookAdditional extends ExchangeData {
                 break;
             }
         }
-        return additional.getNBT();
+        return additional;
     }
 
     private static int bookHash(List<String> pages) {

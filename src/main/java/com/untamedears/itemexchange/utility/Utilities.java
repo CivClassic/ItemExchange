@@ -4,6 +4,7 @@ import co.aikar.commands.InvalidCommandArgument;
 import com.google.common.base.Strings;
 import com.untamedears.itemexchange.ItemExchangePlugin;
 import com.untamedears.itemexchange.rules.BulkExchangeRule;
+import com.untamedears.itemexchange.rules.ExchangeRule;
 import com.untamedears.itemexchange.rules.additional.BookAdditional;
 import com.untamedears.itemexchange.rules.additional.EnchantStorageAdditional;
 import com.untamedears.itemexchange.rules.additional.PotionAdditional;
@@ -11,7 +12,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
-import com.untamedears.itemexchange.rules.ExchangeRule;
 import java.util.stream.Collectors;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -34,9 +34,9 @@ import vg.civcraft.mc.civmodcore.api.InventoryAPI;
 import vg.civcraft.mc.civmodcore.api.ItemAPI;
 import vg.civcraft.mc.civmodcore.api.MaterialAPI;
 import vg.civcraft.mc.civmodcore.util.NullCoalescing;
+import static vg.civcraft.mc.civmodcore.util.NullCoalescing.chain;
 import vg.civcraft.mc.namelayer.GroupManager;
 import vg.civcraft.mc.namelayer.group.Group;
-import static vg.civcraft.mc.civmodcore.util.NullCoalescing.chain;
 
 public final class Utilities {
 
@@ -162,8 +162,9 @@ public final class Utilities {
                     stream(data[5].split(ExchangeRule.SECONDARY_SPACER)).
                     filter((str) -> !Strings.isNullOrEmpty(str)).
                     map(str -> str.split(ExchangeRule.TERTIARY_SPACER)).
-                    collect(Collectors.toMap((str) ->
-                            EnchantAPI.getEnchantment(str[0]), (str) -> Integer.parseInt(str[1]))));
+                    collect(Collectors.toMap(
+                            (str) -> EnchantAPI.getEnchantment(str[0]),
+                            (str) -> Integer.parseInt(str[1]))));
             // (6) Excluded Enchantments
             rule.setExcludedEnchants(Arrays.
                     stream(data[6].split(ExchangeRule.SECONDARY_SPACER)).
@@ -190,15 +191,15 @@ public final class Utilities {
         String[] parts = NullCoalescing.chain(() -> data[10].split(ExchangeRule.SECONDARY_SPACER), new String[0]);
         switch (rule.getMaterial()) {
             case WRITTEN_BOOK:
-                rule.setExtra(BookAdditional.fromLegacy(parts));
+                rule.setAdditional(BookAdditional.fromLegacy(parts));
                 break;
             case ENCHANTED_BOOK:
-                rule.setExtra(EnchantStorageAdditional.fromLegacy(parts));
+                rule.setAdditional(EnchantStorageAdditional.fromLegacy(parts));
                 break;
             case POTION:
             case SPLASH_POTION:
             case LINGERING_POTION:
-                rule.setExtra(PotionAdditional.fromLegacy(parts));
+                rule.setAdditional(PotionAdditional.fromLegacy(parts));
                 break;
             default:
                 break;
@@ -227,7 +228,6 @@ public final class Utilities {
     }
 
     /**
-     *
      *
      */
     @SuppressWarnings("deprecation")
@@ -286,15 +286,41 @@ public final class Utilities {
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public static boolean conformsRequiresEnchants(Map<Enchantment, Integer> ruleEnchants,
-                                                   Map<Enchantment, Integer> metaEnchants) {
-        if (ruleEnchants == metaEnchants) {
+                                                   Map<Enchantment, Integer> metaEnchants,
+                                                   boolean allowUnlistedEnchants) {
+        if (ruleEnchants == null) {
+            ruleEnchants = Collections.emptyMap();
+        }
+        if (metaEnchants == null) {
+            metaEnchants = Collections.emptyMap();
+        }
+        boolean ruleHasEnchants = !ruleEnchants.isEmpty();
+        boolean metaHasEnchants = !metaEnchants.isEmpty();
+        // If neither the rule nor the item has enchants, then there's nothing to match, therefore they match
+        if (!ruleHasEnchants && !metaHasEnchants) {
             return true;
         }
-        if (ruleEnchants == null || metaEnchants == null) {
+        // If the rule doesn't list enchants but the item does, match if allowUnlistedEnchants is true
+        // (ignore your IDE moaning about redundant conditions, better to keep it for readability)
+        if (!ruleHasEnchants && metaHasEnchants && allowUnlistedEnchants) {
+            return true;
+        }
+        // If the rule lists enchants but the item doesn't, the item just doesn't match at all
+        if (ruleHasEnchants && !metaHasEnchants) {
             return false;
         }
-        if (metaEnchants.size() < ruleEnchants.size()) {
-            return false;
+        // Check sizes as a preliminary condition.
+        // - If allowUnlistedEnchants is true, fail only if the item's enchant list is smaller than the rule's
+        if (allowUnlistedEnchants) {
+            if (metaEnchants.size() < ruleEnchants.size()) {
+                return false;
+            }
+        }
+        // - Otherwise the enchant lists must match in size, otherwise you can infer that the enchant lists don't match
+        else {
+            if (metaEnchants.size() != ruleEnchants.size()) {
+                return false;
+            }
         }
         for (Map.Entry<Enchantment, Integer> entry : ruleEnchants.entrySet()) {
             if (!metaEnchants.containsKey(entry.getKey())) {
