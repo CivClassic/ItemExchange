@@ -303,12 +303,12 @@ public class SetCommand extends BaseCommand {
                 throw new InvalidCommandArgument("Cannot set a repair level for that rule.");
             }
             RepairAdditional additional = new RepairAdditional();
-            if (value.startsWith("<")) {
+            if (value.startsWith("@")) {
                 int level = NullCoalescing.chain(() -> Integer.parseInt(value.substring(1)), (int) ExchangeRule.ERROR);
                 if (level < 2) {
-                    throw new InvalidCommandArgument("You must enter a valid less than value, e.g: <9");
+                    throw new InvalidCommandArgument("You must enter a valid value, e.g: @9");
                 }
-                additional.setRepairCost((level - 2) * -1);
+                additional.setRepairCost(level - 2);
             }
             else if (TextUtil.stringEqualsIgnoreCase(value, "NEW") || TextUtil.stringEqualsIgnoreCase(value, "MINT")) {
                 additional.setRepairCost(0);
@@ -318,7 +318,7 @@ public class SetCommand extends BaseCommand {
                 if (level < 2) {
                     throw new InvalidCommandArgument("You must enter a valid value, e.g: 9");
                 }
-                additional.setRepairCost(level - 2);
+                additional.setRepairCost((level - 2) * -1);
             }
             rule.setAdditional(additional);
             player.sendMessage(ChatColor.GREEN + "Successfully changed repair level condition.");
